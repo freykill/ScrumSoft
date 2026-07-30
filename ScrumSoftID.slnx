@@ -1,1 +1,6 @@
-<Solution />
+<Solution>
+  <Project Path="ScrumSoft.Api/ScrumSoft.Api.csproj" Id="ca4a06b3-df55-4f21-a08d-a25fdc266192" />
+  <Project Path="ScrumSoft.Application/ScrumSoft.Application.csproj" Id="867fee9a-22fe-4a5f-9366-d9b3572cfaf3" />
+  <Project Path="ScrumSoft.Domain/ScrumSoft.Domain.csproj" Id="168d21b0-ef1a-472f-a53b-a7466b946ec0" />
+  <Project Path="ScrumSoft.Infrastructure/ScrumSoft.Infrastructure.csproj" Id="fa07ac56-7267-447c-b22f-909ad182be94" />
+</Solution>
