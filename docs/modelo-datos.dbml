@@ -1,0 +1,96 @@
+// ==========================================
+// ScrumSoftID — Modelo de datos (PostgreSQL)
+//
+// Toda tabla lleva la columna estado con el estado del registro:
+//   A = Activo   I = Inactivo   E = Eliminado (borrado logico)
+// Solo proyectos lleva ademas estado_proyecto, que es su ciclo de vida de negocio.
+// ==========================================
+
+// ------------------------------------------
+// 1. SEGURIDAD Y USUARIOS
+// ------------------------------------------
+Table usuarios {
+  id_usuario uuid [primary key, default: `gen_random_uuid()`]
+  nombre varchar(150) [not null]
+  correo_electronico varchar(255) [not null, unique]
+  password_hash varchar(255) [not null, note: 'BCrypt: salt embebido + pepper por variable de entorno']
+  rol varchar(50) [not null, default: 'Miembro', note: 'Administrador | Miembro']
+  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  fecha_actualizacion timestamptz
+}
+
+// ------------------------------------------
+// 2. ACCESO A PROYECTOS
+// ------------------------------------------
+Table proyecto_usuarios {
+  id_proyecto uuid [not null]
+  id_usuario uuid [not null]
+  fecha_asignacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+
+  indexes {
+    (id_proyecto, id_usuario) [pk]
+    id_usuario [name: 'ix_proyecto_usuarios_usuario', note: 'Consulta "mis proyectos"']
+  }
+}
+
+// ------------------------------------------
+// 3. CORE DEL KANBAN
+// ------------------------------------------
+Table proyectos {
+  id_proyecto uuid [primary key, default: `gen_random_uuid()`]
+  nombre varchar(200) [not null]
+  descripcion text
+  fecha_inicio date [not null]
+  fecha_fin_prevista date
+  estado_proyecto varchar(50) [not null, note: 'Planificacion | EnProgreso | Completado']
+  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  fecha_actualizacion timestamptz
+
+  indexes {
+    nombre [name: 'ix_proyectos_nombre_trgm', note: 'GIN con pg_trgm: LIKE %texto% no usa btree']
+  }
+}
+
+Table columnas {
+  id_columna uuid [primary key, default: `gen_random_uuid()`]
+  nombre varchar(100) [not null]
+  orden integer [not null, note: 'Huecos de 1000; se renumeran todas al reordenar']
+  id_proyecto uuid [not null]
+  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  fecha_actualizacion timestamptz
+
+  indexes {
+    (id_proyecto, orden) [name: 'ix_columnas_proyecto_orden']
+  }
+}
+
+Table tareas {
+  id_tarea uuid [primary key, default: `gen_random_uuid()`]
+  titulo varchar(255) [not null]
+  descripcion text
+  prioridad varchar(50) [not null, note: 'Baja | Media | Alta | Critica']
+  id_responsable uuid
+  id_columna uuid [not null]
+  orden integer [not null, note: 'Huecos de 1000; punto medio al arrastrar, renormaliza si no hay hueco']
+  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  fecha_actualizacion timestamptz
+
+  indexes {
+    (id_columna, orden) [name: 'ix_tareas_columna_orden', note: 'Consulta principal del tablero']
+    id_responsable [name: 'ix_tareas_responsable', note: 'Filtro opcional 7.1']
+  }
+}
+
+// ------------------------------------------
+// RELACIONES
+// ------------------------------------------
+Ref fk_proyecto_miembro: proyecto_usuarios.id_proyecto > proyectos.id_proyecto [delete: cascade]
+Ref fk_usuario_miembro: proyecto_usuarios.id_usuario > usuarios.id_usuario [delete: cascade]
+
+Ref fk_proyecto_columna: columnas.id_proyecto > proyectos.id_proyecto [delete: cascade]
+Ref fk_columna_tarea: tareas.id_columna > columnas.id_columna [delete: restrict]
+Ref fk_usuario_tarea: tareas.id_responsable > usuarios.id_usuario [delete: set null]
