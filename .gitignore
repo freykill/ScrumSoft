@@ -6,6 +6,13 @@
 # dotenv files
 .env
 
+# Nada que pueda llevar credenciales
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+*.pfx
+*.key
+
 # User-specific files
 *.rsuser
 *.suo
