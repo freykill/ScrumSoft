@@ -4,6 +4,7 @@ using ScrumSoft.Api.Middlewares;
 using ScrumSoft.Application;
 using ScrumSoft.Application.Common;
 using ScrumSoft.Infrastructure;
+using ScrumSoft.Infrastructure.Realtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,8 @@ builder.Services
         opciones.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
+builder.Services.AddSignalR();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -50,5 +53,6 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+app.MapHub<TableroHub>("/hubs/tablero");
 
 app.Run();

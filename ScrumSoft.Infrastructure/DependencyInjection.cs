@@ -7,6 +7,7 @@ using ScrumSoft.Domain.Common;
 using ScrumSoft.Infrastructure.Persistence;
 using ScrumSoft.Infrastructure.Persistence.Interceptors;
 using ScrumSoft.Infrastructure.Persistence.Repositories;
+using ScrumSoft.Infrastructure.Realtime;
 using ScrumSoft.Infrastructure.Security;
 using ScrumSoft.Infrastructure.Time;
 
@@ -55,6 +56,8 @@ namespace ScrumSoft.Infrastructure
             servicios.AddScoped<IProyectoRepository, ProyectoRepository>();
             servicios.AddScoped<ITareaRepository, TareaRepository>();
             servicios.AddScoped<IUsuarioRepository, UsuarioRepository>();
+
+            servicios.AddScoped<INotificadorDeTablero, NotificadorDeTablero>();
 
             return servicios;
         }
