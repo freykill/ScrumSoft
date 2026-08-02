@@ -1,13 +1,13 @@
-using ScrumSoft.Application.Mediador;
+﻿using ScrumSoft.Application.Mediador;
 using ScrumSoft.Domain.Enums;
 
 namespace ScrumSoft.Application.Tareas
 {
     public sealed record ActualizarTareaComando : IPeticion<TareaDto>
     {
-        public required Guid IdProyecto { get; init; }
+        public Guid IdProyecto { get; init; }
 
-        public required Guid IdTarea { get; init; }
+        public Guid IdTarea { get; init; }
 
         public required string Titulo { get; init; }
 

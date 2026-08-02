@@ -1,4 +1,4 @@
-using ScrumSoft.Application.Mediador;
+﻿using ScrumSoft.Application.Mediador;
 
 namespace ScrumSoft.Application.Tareas
 {
@@ -6,9 +6,9 @@ namespace ScrumSoft.Application.Tareas
     // La posicion numerica la calcula el servidor, nunca el navegador.
     public sealed record MoverTareaComando : IPeticion<TareaDto>
     {
-        public required Guid IdProyecto { get; init; }
+        public Guid IdProyecto { get; init; }
 
-        public required Guid IdTarea { get; init; }
+        public Guid IdTarea { get; init; }
 
         // Puede ser la misma columna de origen si solo se reordena.
         public required Guid IdColumnaDestino { get; init; }

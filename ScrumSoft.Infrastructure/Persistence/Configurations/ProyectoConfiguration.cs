@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ScrumSoft.Domain.Common;
 using ScrumSoft.Domain.Entities;
+using ScrumSoft.Infrastructure.Persistence.Converters;
 
 namespace ScrumSoft.Infrastructure.Persistence.Configurations
 {
@@ -43,6 +45,19 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasConversion<string>()
                 .IsRequired();
 
+            builder.Property(p => p.Estado)
+                .HasColumnName("estado")
+                .HasMaxLength(1)
+                .HasConversion(new ConvertidorDeEstadoRegistro())
+                .IsRequired();
+
+            builder.Property(p => p.FechaCreacion)
+                .HasColumnName("fecha_creacion")
+                .IsRequired();
+
+            builder.Property(p => p.FechaActualizacion)
+                .HasColumnName("fecha_actualizacion");
+
             // Columnas y Miembros son propiedades calculadas que devuelven una lista
             // nueva en cada lectura: EF no puede escribir en ellas. Se mapean los campos.
             builder.Ignore(p => p.Columnas);
@@ -63,6 +78,9 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(p => p.Nombre)
                 .HasDatabaseName("ix_proyectos_nombre");
+
+            // Lo eliminado logicamente no aparece en ninguna consulta.
+            builder.HasQueryFilter(p => p.Estado == EstadoRegistro.Activo);
         }
     }
 }

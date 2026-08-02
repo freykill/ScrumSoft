@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ScrumSoft.Domain.Common;
 using ScrumSoft.Domain.Entities;
+using ScrumSoft.Infrastructure.Persistence.Converters;
 
 namespace ScrumSoft.Infrastructure.Persistence.Configurations
 {
@@ -31,9 +33,24 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasColumnName("orden")
                 .IsRequired();
 
+            builder.Property(c => c.Estado)
+                .HasColumnName("estado")
+                .HasMaxLength(1)
+                .HasConversion(new ConvertidorDeEstadoRegistro())
+                .IsRequired();
+
+            builder.Property(c => c.FechaCreacion)
+                .HasColumnName("fecha_creacion")
+                .IsRequired();
+
+            builder.Property(c => c.FechaActualizacion)
+                .HasColumnName("fecha_actualizacion");
+
             // La consulta del tablero: columnas de un proyecto, en orden.
             builder.HasIndex(c => new { c.IdProyecto, c.Orden })
                 .HasDatabaseName("ix_columnas_proyecto_orden");
+
+            builder.HasQueryFilter(c => c.Estado == EstadoRegistro.Activo);
         }
     }
 }

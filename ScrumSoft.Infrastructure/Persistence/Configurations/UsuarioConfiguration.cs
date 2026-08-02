@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ScrumSoft.Domain.Common;
 using ScrumSoft.Domain.Entities;
+using ScrumSoft.Infrastructure.Persistence.Converters;
 
 namespace ScrumSoft.Infrastructure.Persistence.Configurations
 {
@@ -40,6 +42,19 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasConversion<string>()
                 .IsRequired();
 
+            builder.Property(u => u.Estado)
+                .HasColumnName("estado")
+                .HasMaxLength(1)
+                .HasConversion(new ConvertidorDeEstadoRegistro())
+                .IsRequired();
+
+            builder.Property(u => u.FechaCreacion)
+                .HasColumnName("fecha_creacion")
+                .IsRequired();
+
+            builder.Property(u => u.FechaActualizacion)
+                .HasColumnName("fecha_actualizacion");
+
             builder.Ignore(u => u.Proyectos);
 
             builder.HasMany<ProyectoUsuario>("_proyectos")
@@ -53,6 +68,8 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
             builder.HasIndex(u => u.CorreoElectronico)
                 .IsUnique()
                 .HasDatabaseName("ux_usuarios_correo");
+
+            builder.HasQueryFilter(u => u.Estado == EstadoRegistro.Activo);
 
             // Requisito 6.2: los dos usuarios precargados quedan dentro de la migracion,
             // asi que se crean solos al levantar la base desde cero.

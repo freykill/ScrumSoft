@@ -24,4 +24,9 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup Label="Reportes">
+    <PackageReference Include="QuestPDF" />
+    <PackageReference Include="ClosedXML" />
+  </ItemGroup>
+
 </Project>

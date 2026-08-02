@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ScrumSoft.Domain.Common;
 using ScrumSoft.Domain.Entities;
+using ScrumSoft.Infrastructure.Persistence.Converters;
 
 namespace ScrumSoft.Infrastructure.Persistence.Configurations
 {
@@ -30,6 +32,19 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasColumnName("fecha_asignacion")
                 .IsRequired();
 
+            builder.Property(m => m.Estado)
+                .HasColumnName("estado")
+                .HasMaxLength(1)
+                .HasConversion(new ConvertidorDeEstadoRegistro())
+                .IsRequired();
+
+            builder.Property(m => m.FechaCreacion)
+                .HasColumnName("fecha_creacion")
+                .IsRequired();
+
+            builder.Property(m => m.FechaActualizacion)
+                .HasColumnName("fecha_actualizacion");
+
             // Un usuario no puede estar dos veces en el mismo proyecto.
             builder.HasIndex(m => new { m.IdProyecto, m.IdUsuario })
                 .IsUnique()
@@ -38,6 +53,8 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
             // Consulta "mis proyectos".
             builder.HasIndex(m => m.IdUsuario)
                 .HasDatabaseName("ix_proyecto_usuarios_usuario");
+
+            builder.HasQueryFilter(m => m.Estado == EstadoRegistro.Activo);
         }
     }
 }

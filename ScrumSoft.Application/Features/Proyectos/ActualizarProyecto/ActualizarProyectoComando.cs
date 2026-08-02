@@ -1,11 +1,11 @@
-using ScrumSoft.Application.Mediador;
+﻿using ScrumSoft.Application.Mediador;
 using ScrumSoft.Domain.Enums;
 
 namespace ScrumSoft.Application.Proyectos
 {
     public sealed record ActualizarProyectoComando : IPeticion<ProyectoDto>
     {
-        public required Guid Id { get; init; }
+        public Guid Id { get; init; }
 
         public required string Nombre { get; init; }
 

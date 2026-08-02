@@ -1,6 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using ScrumSoft.Domain.Common;
 using ScrumSoft.Domain.Entities;
+using ScrumSoft.Infrastructure.Persistence.Converters;
 
 namespace ScrumSoft.Infrastructure.Persistence.Configurations
 {
@@ -43,6 +45,19 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasColumnName("orden")
                 .IsRequired();
 
+            builder.Property(t => t.Estado)
+                .HasColumnName("estado")
+                .HasMaxLength(1)
+                .HasConversion(new ConvertidorDeEstadoRegistro())
+                .IsRequired();
+
+            builder.Property(t => t.FechaCreacion)
+                .HasColumnName("fecha_creacion")
+                .IsRequired();
+
+            builder.Property(t => t.FechaActualizacion)
+                .HasColumnName("fecha_actualizacion");
+
             // Restrict: la regla de "no eliminar columna con tareas" vive en el dominio,
             // pero la base tambien la respalda.
             builder.HasOne(t => t.Columna)
@@ -62,6 +77,8 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
 
             builder.HasIndex(t => t.IdResponsable)
                 .HasDatabaseName("ix_tareas_responsable");
+
+            builder.HasQueryFilter(t => t.Estado == EstadoRegistro.Activo);
         }
     }
 }

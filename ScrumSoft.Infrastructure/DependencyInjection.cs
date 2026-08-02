@@ -8,6 +8,7 @@ using ScrumSoft.Infrastructure.Persistence;
 using ScrumSoft.Infrastructure.Persistence.Interceptors;
 using ScrumSoft.Infrastructure.Persistence.Repositories;
 using ScrumSoft.Infrastructure.Realtime;
+using ScrumSoft.Infrastructure.Reportes;
 using ScrumSoft.Infrastructure.Security;
 using ScrumSoft.Infrastructure.Time;
 
@@ -58,6 +59,16 @@ namespace ScrumSoft.Infrastructure
             servicios.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
             servicios.AddScoped<INotificadorDeTablero, NotificadorDeTablero>();
+
+            // QuestPDF exige declarar la licencia antes de generar el primer documento.
+            // Community es gratuita para organizaciones con ingresos bajo un millon de dolares.
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+            // Los dos se registran contra la misma interfaz. GenerarReporteHandler recibe
+            // IEnumerable<IExportadorDeReporte> y elige por formato: agregar un tercero
+            // es escribir una clase y sumar una linea aqui, sin tocar nada existente.
+            servicios.AddSingleton<IExportadorDeReporte, ExportadorPdf>();
+            servicios.AddSingleton<IExportadorDeReporte, ExportadorExcel>();
 
             return servicios;
         }

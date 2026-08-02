@@ -19,10 +19,16 @@ namespace ScrumSoft.Application.Mediador
             // La peticion esta tipada como IPeticion<TRespuesta>, pero en tiempo de ejecucion
             // es un tipo concreto (CrearProyectoComando, por ejemplo). El envoltorio recupera
             // ese tipo concreto para poder pedirle al contenedor IManejador<Concreto, TRespuesta>.
-            var envoltorio = (EnvoltorioBase<TRespuesta>)EnvoltoriosPorTipo.GetOrAdd(
+            // El diccionario guarda object porque adentro caben envoltorios de tipos
+            // distintos, uno por cada comando. Solo tienen "object" en comun.
+            var crudo = EnvoltoriosPorTipo.GetOrAdd(
                 peticion.GetType(),
                 tipoDePeticion => Activator.CreateInstance(
                     typeof(Envoltorio<,>).MakeGenericType(tipoDePeticion, typeof(TRespuesta)))!);
+
+            // Se sostiene por la clase base, que es el unico tipo que este metodo
+            // puede nombrar: aqui no se conoce CrearProyectoComando.
+            var envoltorio = (EnvoltorioBase<TRespuesta>)crudo;
 
             return envoltorio.ManejarAsync(peticion, proveedor, cancelacion);
         }
