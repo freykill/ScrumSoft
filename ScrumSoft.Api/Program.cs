@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -77,7 +78,15 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization();
+// Todo endpoint exige token salvo que diga [AllowAnonymous] a proposito.
+// Asi, si un controlador nuevo se queda sin [Authorize], el olvido lo deja
+// cerrado en vez de abierto.
+builder.Services.AddAuthorization(opciones =>
+{
+    opciones.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
 
 // Origenes permitidos para el frontend. Se configuran por appsettings o variable
