@@ -1,5 +1,6 @@
 import { Injectable, effect, signal } from '@angular/core';
 import { Subject } from 'rxjs';
+import { TEMA_DEFECTO } from '../../config';
 
 export interface AppConfig {
     inputStyle: string;
@@ -23,14 +24,8 @@ interface LayoutState {
     providedIn: 'root',
 })
 export class LayoutService {
-    _config: AppConfig = {
-        ripple: false,
-        inputStyle: 'outlined',
-        menuMode: 'static',
-        colorScheme: 'light',
-        theme: 'lara-light-indigo',
-        scale: 14,
-    };
+    /** Estado inicial, definido en config/theme.config.ts */
+    _config: AppConfig = { ...TEMA_DEFECTO };
 
     config = signal<AppConfig>(this._config);
 

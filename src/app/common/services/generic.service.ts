@@ -234,7 +234,8 @@ export class GenericService {
         }
 
         if (payload && typeof payload === 'object') {
-            const candidate = payload.message ?? payload.description ?? payload.title ?? payload.error;
+            // ProblemDetails de .NET: `detail` trae el mensaje concreto, `title` el generico
+            const candidate = payload.detail ?? payload.message ?? payload.description ?? payload.title ?? payload.error;
             if (typeof candidate === 'string' && candidate.trim()) {
                 return candidate;
             }

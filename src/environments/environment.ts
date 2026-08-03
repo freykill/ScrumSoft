@@ -4,5 +4,5 @@
 export const environment = {
     production: false,
     name: 'local',
-    urlBackend: 'https://localhost:5001/api'
+    urlBackend: 'https://localhost:7086'
 };

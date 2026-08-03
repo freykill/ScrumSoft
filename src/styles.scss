@@ -12,3 +12,6 @@ $gutter: 1rem; //for primeflex grid system
 @import "assets/demo/styles/flags/flags.css";
 @import "assets/demo/styles/badges.scss";
 @import "assets/demo/styles/code.scss";
+
+/* Colores de marca. Va al final: pisa las variables del tema de PrimeNG */
+@import "brand.scss";

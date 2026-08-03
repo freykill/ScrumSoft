@@ -6,7 +6,6 @@
 /** Claves con las que se guarda info en localStorage / sessionStorage. */
 export const STORAGE_KEYS = {
     TOKEN: 'access_token',
-    REFRESH_TOKEN: 'refresh_token',
     USUARIO: 'usuario'
 } as const;
 

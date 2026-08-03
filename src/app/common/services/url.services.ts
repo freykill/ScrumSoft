@@ -2,8 +2,11 @@ import { Injectable } from '@angular/core';
 import { environment } from 'src/environments/environment';
 
 /**
- * Catalogo central de urls del backend.
+ * Catalogo central de urls del backend (ScrumSoft API).
  * Aqui se declaran todos los endpoints, nada de urls sueltas en los services.
+ *
+ * Las rutas con parametros de ruta se exponen como funcion, no como string,
+ * porque el id va en medio del path y no al final (ej: /proyectos/{id}/tareas).
  */
 @Injectable({ providedIn: 'root' })
 export class UrlServices {
@@ -11,10 +14,27 @@ export class UrlServices {
     /** Base del api, cambia segun el ambiente compilado (local / dev / stage / prod). */
     urlApiBackend = environment.urlBackend;
 
-    // --- Contextos ---
-    // securityContext = this.urlApiBackend + '/secv1';
+    /** Contexto versionado, todos los endpoints cuelgan de aqui. */
+    apiV1 = this.urlApiBackend + '/api/v1';
 
-    // --- Endpoints ---
-    // urlUsuario = this.securityContext + '/usuario';
-    // urlUsuarioDelete = this.urlUsuario + '/delete';
+    // --- Auth ---
+    urlLogin = this.apiV1 + '/auth/login';
+
+    // --- Proyectos ---
+    urlProyectos = this.apiV1 + '/proyectos';
+    urlProyecto = (idProyecto: string): string => `${this.urlProyectos}/${idProyecto}`;
+    urlProyectoTablero = (idProyecto: string): string => `${this.urlProyecto(idProyecto)}/tablero`;
+
+    // --- Reportes (devuelve archivo: usar METHODS.FILE) ---
+    urlProyectoReporte = (idProyecto: string): string => `${this.urlProyecto(idProyecto)}/reporte`;
+
+    // --- Columnas ---
+    urlColumnas = (idProyecto: string): string => `${this.urlProyecto(idProyecto)}/columnas`;
+    urlColumna = (idProyecto: string, idColumna: string): string => `${this.urlColumnas(idProyecto)}/${idColumna}`;
+    urlColumnasOrden = (idProyecto: string): string => `${this.urlColumnas(idProyecto)}/orden`;
+
+    // --- Tareas ---
+    urlTareas = (idProyecto: string): string => `${this.urlProyecto(idProyecto)}/tareas`;
+    urlTarea = (idProyecto: string, idTarea: string): string => `${this.urlTareas(idProyecto)}/${idTarea}`;
+    urlTareaMover = (idProyecto: string, idTarea: string): string => `${this.urlTarea(idProyecto, idTarea)}/mover`;
 }

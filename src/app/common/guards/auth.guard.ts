@@ -1,19 +1,18 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { STORAGE_KEYS } from '../../config';
+import { AuthService } from '../services/auth.service';
 
-/**
- * Protege las rutas privadas. Cascara: por ahora solo mira si hay token en
- * localStorage. Cuando exista AuthService la validacion se mueve alla
- * (expiracion del jwt, refresh, permisos).
- */
+/** Protege las rutas privadas: exige token vigente y no expirado. */
 export const authGuard: CanActivateFn = (route, state) => {
     const router = inject(Router);
-    const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+    const auth = inject(AuthService);
 
-    if (token) {
+    if (auth.estaAutenticado()) {
         return true;
     }
+
+    // Sesion caducada o inexistente: se limpia lo que haya quedado sucio
+    auth.cerrarSesion();
 
     // Se guarda a donde queria entrar para devolverlo ahi despues del login
     return router.createUrlTree(['/auth/login'], {

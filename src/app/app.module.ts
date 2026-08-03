@@ -24,6 +24,8 @@ import { PhotoService } from './demo/service/photo.service';
         HttpClientModule
     ],
     providers: [
+        // Rutas con # : el servidor solo recibe "/", asi el F5 y los links directos
+        // funcionan en cualquier hosting sin configurar fallback a index.html
         { provide: LocationStrategy, useClass: HashLocationStrategy },
         httpInterceptorProviders,
         CountryService, CustomerService, EventService, IconService, NodeService,

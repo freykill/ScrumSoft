@@ -3,15 +3,18 @@ import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { STORAGE_KEYS } from '../../config';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class HttpRequestInterceptor implements HttpInterceptor {
 
-    constructor(private router: Router) { }
+    constructor(
+        private readonly router: Router,
+        private readonly auth: AuthService
+    ) { }
 
     intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-        const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
+        const token = this.auth.token;
 
         // Sin token, o peticion a un json local de la plantilla: se deja pasar tal cual
         if (token && !request.url.startsWith('assets/')) {
@@ -26,7 +29,7 @@ export class HttpRequestInterceptor implements HttpInterceptor {
             catchError((error: HttpErrorResponse) => {
                 // Token invalido o expirado: se limpia la sesion y fuera
                 if (error.status === 401) {
-                    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+                    this.auth.cerrarSesion();
                     this.router.navigate(['/auth/login']);
                 }
 
