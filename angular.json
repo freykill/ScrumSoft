@@ -48,7 +48,49 @@
                                     "maximumError": "4kb"
                                 }
                             ],
-                            "outputHashing": "all"
+                            "outputHashing": "all",
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.prod.ts"
+                                }
+                            ]
+                        },
+                        "stage": {
+                            "budgets": [
+                                {
+                                    "type": "initial",
+                                    "maximumWarning": "1mb",
+                                    "maximumError": "5mb"
+                                },
+                                {
+                                    "type": "anyComponentStyle",
+                                    "maximumWarning": "2kb",
+                                    "maximumError": "4kb"
+                                }
+                            ],
+                            "outputHashing": "all",
+                            "sourceMap": true,
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.stage.ts"
+                                }
+                            ]
+                        },
+                        "dev": {
+                            "buildOptimizer": false,
+                            "optimization": false,
+                            "vendorChunk": true,
+                            "extractLicenses": false,
+                            "sourceMap": true,
+                            "namedChunks": true,
+                            "fileReplacements": [
+                                {
+                                    "replace": "src/environments/environment.ts",
+                                    "with": "src/environments/environment.dev.ts"
+                                }
+                            ]
                         },
                         "development": {
                             "buildOptimizer": false,
@@ -66,6 +108,12 @@
                     "configurations": {
                         "production": {
                             "buildTarget": "sakai-ng:build:production"
+                        },
+                        "stage": {
+                            "buildTarget": "sakai-ng:build:stage"
+                        },
+                        "dev": {
+                            "buildTarget": "sakai-ng:build:dev"
                         },
                         "development": {
                             "buildTarget": "sakai-ng:build:development"
