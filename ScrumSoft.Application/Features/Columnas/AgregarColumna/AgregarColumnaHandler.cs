@@ -15,16 +15,15 @@ namespace ScrumSoft.Application.Columnas
         {
             ArgumentNullException.ThrowIfNull(peticion);
 
-            var proyecto = await acceso.ObtenerConAccesoAsync(peticion.IdProyecto, cancelacion).ConfigureAwait(false);
+            var proyecto = await acceso.ObtenerConAccesoAsync(peticion.IdProyecto, cancelacion);
 
             // El dominio calcula el orden: al final del tablero, con hueco de 1000.
             var columna = proyecto.AgregarColumna(peticion.Nombre);
 
-            await unitOfWork.GuardarCambiosAsync(cancelacion).ConfigureAwait(false);
+            await unitOfWork.GuardarCambiosAsync(cancelacion);
 
             await notificador
-                .ColumnasActualizadasAsync(proyecto.Id, ColumnaDto.Desde(proyecto.Columnas), cancelacion)
-                .ConfigureAwait(false);
+                .ColumnasActualizadasAsync(proyecto.Id, ColumnaDto.Desde(proyecto.Columnas), cancelacion);
 
             return ColumnaDto.Desde(columna);
         }

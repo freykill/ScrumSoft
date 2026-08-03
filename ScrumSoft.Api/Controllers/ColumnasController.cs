@@ -20,8 +20,11 @@ namespace ScrumSoft.Api.Controllers
             [FromServices] IMediador mediador,
             Guid idProyecto,
             [FromBody] AgregarColumnaComando comando,
-            CancellationToken cancelacion) =>
-            Ok(await mediador.EnviarAsync(comando with { IdProyecto = idProyecto }, cancelacion));
+            CancellationToken cancelacion)
+        {
+            var dto = await mediador.EnviarAsync(comando with { IdProyecto = idProyecto }, cancelacion);
+            return Ok(dto);
+        }
 
         /// <summary>Cambia el nombre de una columna.</summary>
         [HttpPut("{idColumna:guid}")]

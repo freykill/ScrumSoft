@@ -42,7 +42,7 @@ namespace ScrumSoft.Api.Controllers
             [FromBody] CrearProyectoComando comando,
             CancellationToken cancelacion)
         {
-            var dto = await mediador.EnviarAsync(comando, cancelacion);
+            var dto = await mediador.EnviarAsync(comando with {  }, cancelacion);
 
             return CreatedAtAction(nameof(Tablero), new { idProyecto = dto.Id }, dto);
         }

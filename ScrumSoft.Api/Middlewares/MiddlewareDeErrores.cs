@@ -22,7 +22,7 @@ namespace ScrumSoft.Api.Middlewares
 
             try
             {
-                await siguiente(contexto).ConfigureAwait(false);
+                await siguiente(contexto);
             }
             catch (ValidationException ex)
             {

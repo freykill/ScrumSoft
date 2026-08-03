@@ -16,8 +16,7 @@ namespace ScrumSoft.Application.Auth
             ArgumentNullException.ThrowIfNull(peticion);
 
             var usuario = await usuarios
-                .ObtenerPorCorreoAsync(peticion.CorreoElectronico.Trim().ToLowerInvariant(), cancelacion)
-                .ConfigureAwait(false);
+                .ObtenerPorCorreoAsync(peticion.CorreoElectronico.Trim().ToLowerInvariant(), cancelacion);
 
             // Mismo mensaje si el correo no existe o si la contrasena es incorrecta:
             // distinguirlos permitiria averiguar que correos estan registrados.

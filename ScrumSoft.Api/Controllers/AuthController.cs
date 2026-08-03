@@ -16,10 +16,13 @@ namespace ScrumSoft.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status403Forbidden)]
-        public async Task<ActionResult<SesionDto>> Login(
-            [FromServices] IMediador mediador,
+        public async Task<ActionResult<SesionDto>> Login([FromServices] IMediador mediador,
             [FromBody] CredencialesComando comando,
-            CancellationToken cancelacion) =>
-            Ok(await mediador.EnviarAsync(comando, cancelacion));
+            CancellationToken cancelacion)
+        {
+            var dto = await mediador.EnviarAsync(comando, cancelacion);
+            return Ok(dto);
+        }
+            
     }
 }

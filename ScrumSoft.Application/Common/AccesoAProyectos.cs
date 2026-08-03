@@ -13,7 +13,7 @@ namespace ScrumSoft.Application.Common
             Guid idProyecto,
             CancellationToken cancelacion = default)
         {
-            var proyecto = await proyectos.ObtenerPorIdAsync(idProyecto, cancelacion).ConfigureAwait(false)
+            var proyecto = await proyectos.ObtenerPorIdAsync(idProyecto, cancelacion)
                 ?? throw new RecursoNoEncontradoException("Proyecto", idProyecto);
 
             if (!usuarioActual.EsAdministrador && !proyecto.EsMiembro(usuarioActual.Id))
