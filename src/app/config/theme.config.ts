@@ -3,8 +3,9 @@
  * Es el estado inicial del LayoutService; el usuario puede cambiarlo en caliente
  * desde el panel de configuracion de Sakai (el engranaje del topbar).
  *
- * Los COLORES no estan aqui: viven en src/brand.scss como variables CSS,
- * para no tener el mismo hex escrito en dos sitios.
+ * Los COLORES no estan aqui. El primario vive en el tema:
+ *   src/assets/layout/styles/theme/lara-light-scrum/theme.css
+ * y los secundarios de marca en src/brand.scss. Ver brand.scss para el porque.
  */
 export const TEMA_DEFECTO = {
     /**

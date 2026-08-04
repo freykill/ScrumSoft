@@ -1,0 +1,47 @@
+<app-page-header titulo="Usuarios"
+                 descripcion="Administra quien tiene acceso a ScrumSoft y con que rol."
+                 [ruta]="ruta">
+    <button pButton pRipple icon="pi pi-plus" label="Nuevo usuario"></button>
+</app-page-header>
+
+<div class="surface-card border-round-xl p-4">
+    <p-table [value]="usuarios" [rows]="10" [paginator]="usuarios.length > 10"
+             styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '50rem' }">
+
+        <ng-template pTemplate="header">
+            <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+                <th style="width: 8rem"></th>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-usuario>
+            <tr>
+                <td class="font-medium text-900">{{ usuario.nombre }}</td>
+                <td class="text-600">{{ usuario.correoElectronico }}</td>
+                <td>
+                    <p-tag [value]="usuario.rol" [severity]="severidadRol(usuario.rol)"></p-tag>
+                </td>
+                <td>
+                    <p-tag [value]="esActivo(usuario) ? 'Activo' : 'Eliminado'"
+                           [severity]="esActivo(usuario) ? 'success' : 'danger'"></p-tag>
+                </td>
+                <td class="text-right">
+                    <button pButton pRipple icon="pi pi-pencil" pTooltip="Editar"
+                            class="p-button-text p-button-rounded mr-1"></button>
+                    <button pButton pRipple icon="pi pi-trash" pTooltip="Eliminar"
+                            class="p-button-text p-button-rounded p-button-danger"></button>
+                </td>
+            </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="5" class="text-center text-600 py-5">No hay usuarios registrados.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>

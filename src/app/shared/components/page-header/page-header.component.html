@@ -1,0 +1,13 @@
+<p-breadcrumb [model]="ruta" [home]="inicio"
+              styleClass="border-none surface-ground p-0 mb-3"></p-breadcrumb>
+
+<div class="surface-card border-round-xl p-4 mb-3 flex flex-column md:flex-row md:align-items-center justify-content-between gap-3">
+    <div class="flex-1">
+        <h2 class="text-900 text-2xl font-bold m-0">{{ titulo }}</h2>
+        <p *ngIf="descripcion" class="text-600 mt-2 mb-0">{{ descripcion }}</p>
+    </div>
+
+    <div class="flex-shrink-0">
+        <ng-content></ng-content>
+    </div>
+</div>

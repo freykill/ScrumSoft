@@ -1,30 +1,28 @@
 /* ============================================================================
    Colores de marca — ScrumSoft
 
-   Sacados del logo (src/assets/scrum/logo.png):
-     carmin  #e63b54  flecha roja      -> primario
-     ambar   #f9c85c  flecha amarilla  -> secundario
-     lavanda #d6d7f2  flecha inferior  -> secundario
-
    OJO: el color PRIMARIO no se define aqui.
    El theme.css de PrimeNG trae los colores como hex literales en cada regla
-   (.p-button { background: #e63b54 }), no como var(), asi que pisar la variable
+   (.p-button { background: #22c55e }), no como var(), asi que pisar la variable
    no alcanza. El primario vive en el tema propio:
 
        src/assets/layout/styles/theme/lara-light-scrum/theme.css
 
    que es una copia de lara-light-indigo con la paleta indigo reemplazada:
-       #EEF2FF -> #fef2f4     #6366F1 -> #e63b54
-       #E0E7FF -> #fde3e7     #4F46E5 -> #d32446
-       #C7D2FE -> #fbccd4     #4338CA -> #b11839
+       #EEF2FF -> #f0fdf4     #6366F1 -> #22c55e   (primario)
+       #E0E7FF -> #dcfce7     #4F46E5 -> #16a34a   (hover)
+       #C7D2FE -> #bbf7d0     #4338CA -> #15803d   (activo)
 
-   Para cambiar el primario: repetir ese reemplazo sobre una copia limpia
-   de lara-light-indigo. No editar el tema a mano regla por regla.
+   Para cambiar el primario: borrar esa carpeta, copiar de nuevo
+   lara-light-indigo y repetir el reemplazo con la paleta nueva.
+   Nunca editar el tema a mano regla por regla.
    ============================================================================ */
 
 :root {
-    /* Secundarios del logo. PrimeNG no los usa, son para graficos, badges
-       y detalles propios. Se leen con var(--marca-ambar) */
-    --marca-ambar: #f9c85c;
-    --marca-lavanda: #d6d7f2;
+    /* Tonos del logo (src/assets/scrum/logo.png). PrimeNG no los usa:
+       son para graficos, badges de prioridad y detalles. var(--marca-coral) */
+    --marca-coral: #f08080;
+    --marca-ambar: #fbd46d;
+    --marca-azul: #a8c8e8;
+    --marca-verde: #a8e6a3;
 }
