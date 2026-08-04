@@ -15,3 +15,20 @@ export interface UsuarioDto {
     fechaCreacion: string;
     fechaActualizacion?: string | null;
 }
+
+/** Lo que se manda al crear o editar. La clave viaja en claro, el hash lo hace el backend. */
+export interface GuardarUsuarioComando {
+    nombre: string;
+    correoElectronico: string;
+    rol: RolUsuario;
+    /** En edicion es opcional: si no viene, la clave no se toca. */
+    clave?: string;
+}
+
+/** Estado de los filtros de la lista. `null` = sin filtrar por ese campo. */
+export interface UsuarioFiltros {
+    busqueda: string;
+    rol: RolUsuario | null;
+    /** 'A' | 'E' */
+    estado: string | null;
+}

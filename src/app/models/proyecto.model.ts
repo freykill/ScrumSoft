@@ -41,6 +41,23 @@ export interface CrearProyectoComando {
     columnas?: string[] | null;
 }
 
+/**
+ * Lo que emite el formulario. El contenedor lo traduce a CrearProyectoComando
+ * o a ActualizarProyectoComando segun si es alta o edicion, porque la API
+ * pide campos distintos en cada caso: al crear se mandan las columnas
+ * iniciales del tablero, al editar se manda el estado.
+ */
+export interface GuardarProyectoComando {
+    nombre: string;
+    descripcion?: string | null;
+    fechaInicio: string;
+    fechaFinPrevista?: string | null;
+    /** Solo en alta. */
+    columnas?: string[];
+    /** Solo en edicion. */
+    estadoProyecto?: EstadoProyecto;
+}
+
 /** PUT /api/v1/proyectos/{idProyecto} */
 export interface ActualizarProyectoComando {
     id: string;

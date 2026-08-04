@@ -1,0 +1,26 @@
+<p-dialog [visible]="visible"
+          (visibleChange)="visibleChange.emit($event)"
+          (onShow)="reiniciar()"
+          [header]="esNueva ? 'Nueva columna' : 'Renombrar columna'"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{ width: '28rem' }"
+          [breakpoints]="{ '640px': '92vw' }">
+
+    <form [formGroup]="form" (ngSubmit)="enviar()" class="flex flex-column gap-2 pt-2">
+        <label for="nombre" class="font-medium text-900">Nombre de la etapa</label>
+        <input pInputText id="nombre" formControlName="nombre" autocomplete="off"
+               placeholder="Por hacer, En revision, Hecho..."
+               [class.ng-invalid]="invalido" [class.ng-dirty]="invalido">
+        <small class="p-error" *ngIf="invalido">Escribe un nombre de hasta 60 caracteres.</small>
+        <small class="text-600" *ngIf="esNueva">Se agrega al final del tablero.</small>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-text" (click)="cerrar()"></button>
+        <button pButton pRipple type="button" label="Guardar" icon="pi pi-check"
+                [loading]="guardando" (click)="enviar()"></button>
+    </ng-template>
+</p-dialog>

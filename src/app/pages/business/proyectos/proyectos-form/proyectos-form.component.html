@@ -1,0 +1,74 @@
+<p-dialog [visible]="visible"
+          (visibleChange)="visibleChange.emit($event)"
+          (onShow)="reiniciar()"
+          [header]="esNuevo ? 'Nuevo proyecto' : 'Editar proyecto'"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{ width: '36rem' }"
+          [breakpoints]="{ '640px': '92vw' }">
+
+    <form [formGroup]="form" (ngSubmit)="enviar()" class="flex flex-column gap-3 pt-2">
+
+        <div class="flex flex-column gap-2">
+            <label for="nombre" class="font-medium text-900">Nombre</label>
+            <input pInputText id="nombre" formControlName="nombre" autocomplete="off"
+                   placeholder="Nombre del proyecto"
+                   [class.ng-invalid]="invalido('nombre')" [class.ng-dirty]="invalido('nombre')">
+            <small class="p-error" *ngIf="invalido('nombre')">Escribe al menos 3 caracteres.</small>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label for="descripcion" class="font-medium text-900">
+                Descripcion <span class="text-500 font-normal">(opcional)</span>
+            </label>
+            <textarea pInputTextarea id="descripcion" formControlName="descripcion" rows="2"
+                      placeholder="De que trata el proyecto"></textarea>
+        </div>
+
+        <div class="grid formgrid m-0 gap-3">
+            <div class="col flex flex-column gap-2 p-0">
+                <label for="fechaInicio" class="font-medium text-900">Fecha de inicio</label>
+                <p-calendar inputId="fechaInicio" formControlName="fechaInicio"
+                            dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="true"
+                            styleClass="w-full" appendTo="body"></p-calendar>
+                <small class="p-error" *ngIf="invalido('fechaInicio')">La fecha de inicio es obligatoria.</small>
+            </div>
+
+            <div class="col flex flex-column gap-2 p-0">
+                <label for="fechaFin" class="font-medium text-900">
+                    Fin previsto <span class="text-500 font-normal">(opcional)</span>
+                </label>
+                <p-calendar inputId="fechaFin" formControlName="fechaFinPrevista"
+                            dateFormat="dd/mm/yy" [showIcon]="true" [showButtonBar]="true"
+                            styleClass="w-full" appendTo="body"></p-calendar>
+            </div>
+        </div>
+
+        <small class="p-error -mt-2" *ngIf="rangoInvalido">
+            El fin previsto no puede ser anterior a la fecha de inicio.
+        </small>
+
+        <!-- Solo al crear: la API recibe los nombres de las columnas iniciales del tablero -->
+        <div class="flex flex-column gap-2" *ngIf="esNuevo">
+            <label for="columnas" class="font-medium text-900">Columnas iniciales</label>
+            <p-chips inputId="columnas" formControlName="columnas" [addOnBlur]="true"
+                     placeholder="Escribe y pulsa Enter" styleClass="w-full"></p-chips>
+            <small class="text-600">Se crea el tablero con estas etapas. Despues se pueden cambiar.</small>
+        </div>
+
+        <!-- Solo al editar: al crear, el proyecto nace en Planificacion -->
+        <div class="flex flex-column gap-2" *ngIf="!esNuevo">
+            <label for="estado" class="font-medium text-900">Estado</label>
+            <p-dropdown inputId="estado" formControlName="estadoProyecto" [options]="opcionesEstado"
+                        optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-text" (click)="cerrar()"></button>
+        <button pButton pRipple type="button" label="Guardar" icon="pi pi-check"
+                [loading]="guardando" (click)="enviar()"></button>
+    </ng-template>
+</p-dialog>

@@ -1,0 +1,53 @@
+<p-table [value]="usuarios"
+         [loading]="cargando"
+         [rows]="filasPorPagina"
+         [paginator]="usuarios.length > filasPorPagina"
+         [rowsPerPageOptions]="opcionesPagina"
+         [showCurrentPageReport]="true"
+         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
+         styleClass="p-datatable-sm"
+         [tableStyle]="{ 'min-width': '50rem' }">
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
+            <th pSortableColumn="correoElectronico">Correo <p-sortIcon field="correoElectronico"></p-sortIcon></th>
+            <th pSortableColumn="rol" style="width: 10rem">Rol <p-sortIcon field="rol"></p-sortIcon></th>
+            <th style="width: 9rem">Estado</th>
+            <th style="width: 8rem">Acciones</th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-usuario>
+        <tr>
+            <td class="font-medium text-900">{{ usuario.nombre }}</td>
+            <td class="text-600">{{ usuario.correoElectronico }}</td>
+            <td>
+                <p-tag [value]="usuario.rol" [severity]="severidadRol(usuario.rol)"></p-tag>
+            </td>
+            <td>
+                <p-tag [value]="esActivo(usuario) ? 'Activo' : 'Eliminado'"
+                       [severity]="esActivo(usuario) ? 'success' : 'danger'"></p-tag>
+            </td>
+            <td class=" flex">
+                <button pButton pRipple icon="pi pi-pencil " pTooltip="Editar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded "
+                        [disabled]="!esActivo(usuario)"
+                        (click)="editar.emit(usuario)"></button>
+                <button pButton pRipple icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded p-button-danger"
+                        [disabled]="!esActivo(usuario)"
+                        (click)="eliminar.emit(usuario)"></button>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="5" class="text-center py-6">
+                <i class="pi pi-users text-4xl text-300 block mb-3"></i>
+                <span class="text-600">No hay usuarios que coincidan con la busqueda.</span>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>

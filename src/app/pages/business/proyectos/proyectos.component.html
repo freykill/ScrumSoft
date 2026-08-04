@@ -1,52 +1,34 @@
-<app-page-header titulo="Proyectos"
-                 descripcion="Cada proyecto tiene su propio tablero con columnas y tareas."
-                 [ruta]="ruta">
-    <button pButton pRipple icon="pi pi-plus" label="Nuevo proyecto"></button>
-</app-page-header>
+<div
+    class="surface-card border-round-xl border-1 surface-border p-4 mb-3 flex flex-column md:flex-row md:align-items-center justify-content-between gap-3">
+    <div class="flex-1">
+        <h2 class="text-900 text-2xl font-bold m-0">Proyectos</h2>
+        <p class="text-600 mt-2 mb-0">Cada proyecto tiene su propio tablero con columnas y tareas.</p>
+    </div>
 
-<div class="surface-card border-round-xl p-4">
-    <p-table [value]="proyectos" [rows]="10" [paginator]="proyectos.length > 10"
-             styleClass="p-datatable-sm" [tableStyle]="{ 'min-width': '55rem' }">
-
-        <ng-template pTemplate="header">
-            <tr>
-                <th>Nombre</th>
-                <th>Inicio</th>
-                <th>Fin previsto</th>
-                <th>Estado</th>
-                <th class="text-center">Columnas</th>
-                <th style="width: 11rem"></th>
-            </tr>
-        </ng-template>
-
-        <ng-template pTemplate="body" let-proyecto>
-            <tr>
-                <td>
-                    <div class="font-medium text-900">{{ proyecto.nombre }}</div>
-                    <div class="text-600 text-sm">{{ proyecto.descripcion || 'Sin descripcion' }}</div>
-                </td>
-                <td class="text-600">{{ proyecto.fechaInicio | date: 'dd/MM/yyyy' }}</td>
-                <td class="text-600">{{ (proyecto.fechaFinPrevista | date: 'dd/MM/yyyy') || '—' }}</td>
-                <td>
-                    <p-tag [value]="etiquetaEstado(proyecto.estadoProyecto)"
-                           [severity]="severidadEstado(proyecto.estadoProyecto)"></p-tag>
-                </td>
-                <td class="text-center text-600">{{ proyecto.cantidadColumnas }}</td>
-                <td class="text-right">
-                    <button pButton pRipple icon="pi pi-table" pTooltip="Ver tablero"
-                            class="p-button-text p-button-rounded mr-1"></button>
-                    <button pButton pRipple icon="pi pi-pencil" pTooltip="Editar"
-                            class="p-button-text p-button-rounded mr-1"></button>
-                    <button pButton pRipple icon="pi pi-trash" pTooltip="Eliminar"
-                            class="p-button-text p-button-rounded p-button-danger"></button>
-                </td>
-            </tr>
-        </ng-template>
-
-        <ng-template pTemplate="emptymessage">
-            <tr>
-                <td colspan="6" class="text-center text-600 py-5">Todavia no hay proyectos.</td>
-            </tr>
-        </ng-template>
-    </p-table>
+    <div class="flex-shrink-0">
+        <button pButton pRipple icon="pi pi-plus" label="Nuevo proyecto" (click)="nuevo()"></button>
+    </div>
 </div>
+
+<div class="surface-card border-1 surface-border border-round-xl overflow-hidden">
+
+    <!-- Barra de filtros -->
+    <div
+        class="p-3 border-bottom-1 surface-border flex flex-column lg:flex-row gap-2 lg:align-items-center justify-content-between">
+
+        <span class="p-input-icon-left w-full lg:w-30rem">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" class="w-full" placeholder="Buscar por nombre"
+                [(ngModel)]="filtros.nombre" (ngModelChange)="aplicarFiltros()">
+        </span>
+    </div>
+
+    <app-proyectos-list [proyectos]="proyectosVisibles" [cargando]="cargando"
+        (verTablero)="verTablero($event)" (verColumnas)="verColumnas($event)" (editar)="editar($event)"
+        (eliminar)="confirmarEliminacion($event)"></app-proyectos-list>
+</div>
+
+<app-proyectos-form [(visible)]="mostrarFormulario" [proyecto]="proyectoEnEdicion" [guardando]="guardando"
+    (guardar)="guardar($event)"></app-proyectos-form>
+
+<p-confirmDialog [style]="{ width: '28rem' }"></p-confirmDialog>

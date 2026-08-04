@@ -6,6 +6,15 @@ export interface ColumnaDto {
     orden: number;
 }
 
+/**
+ * Fila de la pantalla de administracion de columnas.
+ * `cantidadTareas` hace falta para aplicar la regla de negocio del backend:
+ * no se puede eliminar una columna que tenga tareas dentro.
+ */
+export interface ColumnaFilaDto extends ColumnaDto {
+    cantidadTareas: number;
+}
+
 /** Columna con sus tareas dentro. Solo llega en el tablero. */
 export interface ColumnaConTareasDto extends ColumnaDto {
     tareas: TareaDto[];

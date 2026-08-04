@@ -1,0 +1,60 @@
+<p-table [value]="proyectos"
+         [loading]="cargando"
+         [rows]="filasPorPagina"
+         [paginator]="proyectos.length > filasPorPagina"
+         [rowsPerPageOptions]="opcionesPagina"
+         [showCurrentPageReport]="true"
+         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} proyectos"
+         styleClass="p-datatable-sm"
+         [tableStyle]="{ 'min-width': '55rem' }">
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
+            <th pSortableColumn="fechaInicio" style="width: 9rem">Inicio <p-sortIcon field="fechaInicio"></p-sortIcon></th>
+            <th style="width: 10rem">Fin previsto</th>
+            <th style="width: 11rem">Estado</th>
+            <th style="width: 7rem" class="text-center">Columnas</th>
+            <th style="width: 14rem">Acciones</th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-proyecto>
+        <tr>
+            <td>
+                <div class="font-medium text-900">{{ proyecto.nombre }}</div>
+                <div class="text-600 text-sm">{{ proyecto.descripcion || 'Sin descripcion' }}</div>
+            </td>
+            <td class="text-600">{{ proyecto.fechaInicio | date: 'dd/MM/yyyy' }}</td>
+            <td class="text-600">{{ (proyecto.fechaFinPrevista | date: 'dd/MM/yyyy') || '—' }}</td>
+            <td>
+                <p-tag [value]="etiquetaEstado(proyecto.estadoProyecto)"
+                       [severity]="severidadEstado(proyecto.estadoProyecto)"></p-tag>
+            </td>
+            <td class="text-center text-600">{{ proyecto.cantidadColumnas }}</td>
+            <td class="text-right flex">
+                <button pButton pRipple icon="pi pi-table" pTooltip="Ver tablero" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        (click)="verTablero.emit(proyecto)"></button>
+                <button pButton pRipple icon="pi pi-th-large" pTooltip="Configurar columnas" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        (click)="verColumnas.emit(proyecto)"></button>
+                <button pButton pRipple icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        (click)="editar.emit(proyecto)"></button>
+                <button pButton pRipple icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded p-button-danger"
+                        (click)="eliminar.emit(proyecto)"></button>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="6" class="text-center py-6">
+                <i class="pi pi-briefcase text-4xl text-300 block mb-3"></i>
+                <span class="text-600">No hay proyectos que coincidan con la busqueda.</span>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>

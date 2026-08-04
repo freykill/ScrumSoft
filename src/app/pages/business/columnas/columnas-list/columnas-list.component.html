@@ -1,0 +1,50 @@
+<p-table [value]="columnas"
+         [loading]="cargando"
+         styleClass="p-datatable-sm"
+         [tableStyle]="{ 'min-width': '45rem' }">
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 6rem" class="text-center">Orden</th>
+            <th>Nombre</th>
+            <th style="width: 8rem" class="text-center">Tareas</th>
+            <th style="width: 14rem">Acciones</th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-columna let-i="rowIndex">
+        <tr>
+            <td class="text-center text-600">{{ columna.orden }}</td>
+            <td class="font-medium text-900">{{ columna.nombre }}</td>
+            <td class="text-center">
+                <p-tag [value]="columna.cantidadTareas"
+                       [severity]="tieneTareas(columna) ? 'info' : 'secondary'"></p-tag>
+            </td>
+            <td class="text-right flex">
+                <button pButton pRipple icon="pi pi-arrow-up" pTooltip="Subir" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        [disabled]="i === 0" (click)="subir.emit(i)"></button>
+                <button pButton pRipple icon="pi pi-arrow-down" pTooltip="Bajar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        [disabled]="i === columnas.length - 1" (click)="bajar.emit(i)"></button>
+                <button pButton pRipple icon="pi pi-pencil" pTooltip="Renombrar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        (click)="renombrar.emit(columna)"></button>
+                <button pButton pRipple icon="pi pi-trash" tooltipPosition="top"
+                        class="p-button-text p-button-rounded p-button-danger"
+                        [pTooltip]="tieneTareas(columna) ? 'Tiene tareas dentro, no se puede eliminar' : 'Eliminar'"
+                        [disabled]="tieneTareas(columna)"
+                        (click)="eliminar.emit(columna)"></button>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="4" class="text-center py-6">
+                <i class="pi pi-th-large text-4xl text-300 block mb-3"></i>
+                <span class="text-600">Este proyecto todavia no tiene columnas.</span>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
