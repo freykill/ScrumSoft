@@ -26,8 +26,12 @@
             <td class="text-600">{{ miembro.fechaAsignacion | date: 'dd/MM/yyyy' }}</td>
             <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
             <td class="flex justify-content-end">
-                <button pButton pRipple icon="pi pi-user-minus" pTooltip="Quitar del proyecto"
-                        tooltipPosition="top" class="p-button-text p-button-rounded p-button-danger"
+                <button pButton pRipple icon="pi pi-user-minus" tooltipPosition="top"
+                        class="p-button-text p-button-rounded p-button-danger"
+                        [pTooltip]="esElUnicoMiembro
+                            ? 'No se puede quitar al ultimo miembro: el proyecto se quedaria sin nadie'
+                            : 'Quitar del proyecto'"
+                        [disabled]="esElUnicoMiembro"
                         (click)="quitar.emit(miembro)"></button>
             </td>
         </tr>
