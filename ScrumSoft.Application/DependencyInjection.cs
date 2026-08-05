@@ -8,6 +8,7 @@ using ScrumSoft.Application.Proyectos;
 using ScrumSoft.Application.Reportes;
 using ScrumSoft.Application.Tablero;
 using ScrumSoft.Application.Tareas;
+using ScrumSoft.Application.Usuarios;
 
 namespace ScrumSoft.Application
 {
@@ -39,6 +40,9 @@ namespace ScrumSoft.Application
             servicios.AddScoped<IManejador<ActualizarProyectoComando, ProyectoDto>, ActualizarProyectoHandler>();
             servicios.AddScoped<IManejador<EliminarProyectoComando, Unidad>, EliminarProyectoHandler>();
             servicios.AddScoped<IManejador<ListarProyectosConsulta, PagedResult<ProyectoDto>>, ListarProyectosHandler>();
+
+            // Usuarios
+            servicios.AddScoped<IManejador<ListarUsuariosConsulta, PagedResult<UsuarioDto>>, ListarUsuariosHandler>();
 
             // Columnas
             servicios.AddScoped<IManejador<AgregarColumnaComando, ColumnaDto>, AgregarColumnaHandler>();

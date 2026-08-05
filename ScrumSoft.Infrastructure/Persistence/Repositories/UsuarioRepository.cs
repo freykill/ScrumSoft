@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using ScrumSoft.Application.Common;
 using ScrumSoft.Application.Ports;
 using ScrumSoft.Domain.Entities;
 
@@ -11,6 +12,35 @@ namespace ScrumSoft.Infrastructure.Persistence.Repositories
             ArgumentNullException.ThrowIfNull(usuario);
 
             contexto.Usuarios.Add(usuario);
+        }
+
+        public async Task<PagedResult<Usuario>> ListarAsync(
+            string? filtro,
+            int pagina,
+            int tamanoPagina,
+            CancellationToken cancelacion = default)
+        {
+            var consulta = contexto.Usuarios.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(filtro))
+            {
+                // Una sola cadena contra nombre y correo: el usuario no tiene por que
+                // saber por cual de los dos esta buscando.
+                consulta = consulta.Where(u =>
+                    EF.Functions.ILike(u.Nombre, $"%{filtro}%") ||
+                    EF.Functions.ILike(u.CorreoElectronico, $"%{filtro}%"));
+            }
+
+            var total = await consulta.CountAsync(cancelacion).ConfigureAwait(false);
+
+            var elementos = await consulta
+                .OrderBy(u => u.Nombre)
+                .Skip((pagina - 1) * tamanoPagina)
+                .Take(tamanoPagina)
+                .ToListAsync(cancelacion)
+                .ConfigureAwait(false);
+
+            return new PagedResult<Usuario>(elementos, pagina, tamanoPagina, total);
         }
 
         // El correo se guarda ya normalizado a minusculas por la entidad,
