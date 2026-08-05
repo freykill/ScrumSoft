@@ -64,6 +64,7 @@
 
     <app-tablero-columna *ngFor="let columna of columnas; trackBy: porId"
         [columna]="columna"
+        [nombresDeMiembros]="nombresDeMiembros"
         (nuevaTarea)="nueva($event)"
         (editarTarea)="editar($event)"
         (soltarTarea)="soltar($event)"></app-tablero-columna>
@@ -90,7 +91,7 @@
 </div>
 
 <app-tablero-form [(visible)]="mostrarFormulario" [tarea]="tareaEnEdicion"
-    [nombreColumna]="columnaDestino?.nombre ?? ''" [guardando]="guardando"
+    [nombreColumna]="columnaDestino?.nombre ?? ''" [miembros]="miembros" [guardando]="guardando"
     (guardar)="guardar($event)" (eliminar)="confirmarEliminacion($event)"></app-tablero-form>
 
 <p-confirmDialog [style]="{ width: '28rem' }"></p-confirmDialog>

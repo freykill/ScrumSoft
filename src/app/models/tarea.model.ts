@@ -51,6 +51,11 @@ export interface GuardarTareaComando {
     titulo: string;
     descripcion?: string | null;
     prioridad: Prioridad;
+    /**
+     * null desasigna. Viaja SIEMPRE, tambien al editar: el PUT reemplaza la
+     * tarea entera, asi que omitir el campo deja la tarea sin responsable.
+     */
+    idResponsable: string | null;
 }
 
 /**

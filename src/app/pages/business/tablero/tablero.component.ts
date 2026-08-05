@@ -8,11 +8,17 @@ import {
     ColumnaConTareasDto,
     ColumnaDto,
     GuardarTareaComando,
+    MiembroDto,
     ProyectoDto,
     SoltarTarea,
     TareaDto
 } from 'src/app/models';
-import { ProyectoService, TableroRealtimeService, TareaService } from 'src/app/services';
+import {
+    MiembroService,
+    ProyectoService,
+    TableroRealtimeService,
+    TareaService
+} from 'src/app/services';
 import { calcularVecinos } from 'src/app/utilities';
 
 /**
@@ -47,6 +53,12 @@ export class TableroComponent implements OnInit, OnDestroy {
     proyectos: ProyectoDto[] = [];
 
     columnas: ColumnaConTareasDto[] = [];
+
+    /** El equipo del proyecto: alimenta el selector de responsable. */
+    miembros: MiembroDto[] = [];
+    /** id -> nombre, para que la tarjeta no recorra la lista por cada tarea. */
+    nombresDeMiembros = new Map<string, string>();
+
     cargando = false;
     guardando = false;
 
@@ -70,6 +82,7 @@ export class TableroComponent implements OnInit, OnDestroy {
         private readonly router: Router,
         private readonly proyectoService: ProyectoService,
         private readonly tareaService: TareaService,
+        private readonly miembroService: MiembroService,
         private readonly enVivoService: TableroRealtimeService,
         private readonly confirmacion: ConfirmationService,
         private readonly mensajes: MessageService
@@ -196,10 +209,29 @@ export class TableroComponent implements OnInit, OnDestroy {
         }
 
         this.idProyecto = idProyecto;
-        await this.cargarTablero();
+
+        // En paralelo: son independientes y asi se espera una ida y vuelta en
+        // vez de dos. Los miembros hacen falta para el selector de responsable.
+        await Promise.all([this.cargarTablero(), this.cargarMiembros()]);
 
         // Despues de pintar: primero se ve el tablero, luego se engancha en vivo.
         await this.conectarEnVivo();
+    }
+
+    /**
+     * Si falla no se rompe el tablero: solo se queda sin selector de
+     * responsable, y eso no impide mover ni editar tarjetas.
+     */
+    private async cargarMiembros(): Promise<void> {
+        try {
+            this.miembros = await this.miembroService.listar(this.idProyecto);
+            this.nombresDeMiembros = new Map(
+                this.miembros.map(miembro => [miembro.idUsuario, miembro.nombre])
+            );
+        } catch {
+            this.miembros = [];
+            this.nombresDeMiembros = new Map();
+        }
     }
 
     /** El selector se pide una sola vez, no en cada salto de proyecto. */
@@ -365,6 +397,9 @@ export class TableroComponent implements OnInit, OnDestroy {
 
         try {
             if (this.tareaEnEdicion) {
+                // `datos` trae idResponsable siempre, incluso null. El PUT
+                // reemplaza la tarea entera: si el campo no viajara, editar el
+                // titulo dejaria la tarea sin responsable sin que nadie lo pida.
                 const actualizada = await this.tareaService.actualizar({
                     idProyecto: this.idProyecto,
                     idTarea: this.tareaEnEdicion.id,

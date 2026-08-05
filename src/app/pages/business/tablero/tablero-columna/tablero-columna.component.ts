@@ -18,6 +18,8 @@ import { ColumnaConTareasDto, SoltarTarea, TareaDto } from 'src/app/models';
 export class TableroColumnaComponent {
 
     @Input({ required: true }) columna!: ColumnaConTareasDto;
+    /** id -> nombre. Un Map y no la lista, para resolver en O(1) por tarjeta. */
+    @Input() nombresDeMiembros = new Map<string, string>();
 
     @Output() nuevaTarea = new EventEmitter<ColumnaConTareasDto>();
     @Output() editarTarea = new EventEmitter<TareaDto>();
@@ -35,6 +37,27 @@ export class TableroColumnaComponent {
 
     porId(_indice: number, tarea: TareaDto): string {
         return tarea.id;
+    }
+
+    /**
+     * Puede no estar en el mapa: la tarea conserva a su responsable aunque a
+     * esa persona la hayan sacado del equipo. Se avisa en vez de dejarlo vacio.
+     */
+    nombreResponsable(idResponsable: string): string {
+        return this.nombresDeMiembros.get(idResponsable) ?? 'Ya no es miembro del proyecto';
+    }
+
+    /** Las tarjetas miden 18rem: cabe un circulito con iniciales, no un nombre. */
+    inicialesResponsable(idResponsable: string): string {
+        const nombre = this.nombresDeMiembros.get(idResponsable);
+        if (!nombre) { return '?'; }
+
+        return nombre
+            .split(' ')
+            .filter(parte => parte)
+            .slice(0, 2)
+            .map(parte => parte[0].toUpperCase())
+            .join('');
     }
 
     severidadPrioridad(prioridad: Prioridad): string {

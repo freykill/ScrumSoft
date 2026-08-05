@@ -1,7 +1,13 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { OPCIONES_PRIORIDAD, Prioridad } from 'src/app/enums';
-import { GuardarTareaComando, TareaDto } from 'src/app/models';
+import { GuardarTareaComando, MiembroDto, TareaDto } from 'src/app/models';
+
+/** Una opcion del desplegable de responsable. */
+interface OpcionResponsable {
+    idUsuario: string;
+    nombre: string;
+}
 
 /**
  * Presentacional. Alta y edicion de una tarea.
@@ -22,6 +28,11 @@ export class TableroFormComponent {
     @Input() tarea: TareaDto | null = null;
     /** Solo para decir en el dialogo en que columna cae. */
     @Input() nombreColumna = '';
+    /**
+     * Los del proyecto, no todos los usuarios del sistema: el backend exige
+     * que el responsable pertenezca al equipo y si no responde 400.
+     */
+    @Input() miembros: MiembroDto[] = [];
     @Input() visible = false;
     @Input() guardando = false;
 
@@ -31,10 +42,14 @@ export class TableroFormComponent {
 
     readonly opcionesPrioridad = OPCIONES_PRIORIDAD;
 
+    /** Se arma al abrir, no en un getter: un getter daria un array nuevo en cada ciclo. */
+    opcionesResponsable: OpcionResponsable[] = [];
+
     readonly form = this.fb.nonNullable.group({
         titulo: ['', [Validators.required, Validators.maxLength(150)]],
         descripcion: [''],
-        prioridad: [Prioridad.Media, Validators.required]
+        prioridad: [Prioridad.Media, Validators.required],
+        idResponsable: [null as string | null]
     });
 
     constructor(private readonly fb: FormBuilder) { }
@@ -49,8 +64,30 @@ export class TableroFormComponent {
             titulo: this.tarea?.titulo ?? '',
             descripcion: this.tarea?.descripcion ?? '',
             // Media por defecto: es la que menos afirma cuando aun no se sabe.
-            prioridad: this.tarea?.prioridad ?? Prioridad.Media
+            prioridad: this.tarea?.prioridad ?? Prioridad.Media,
+            idResponsable: this.tarea?.idResponsable ?? null
         });
+
+        this.opcionesResponsable = this.construirOpciones();
+    }
+
+    /**
+     * El backend deja guardar una tarea sin tocar su responsable aunque esa
+     * persona ya no este en el equipo. Si no se ofreciera como opcion, el
+     * desplegable saldria vacio y pareceria que la tarea no tiene a nadie.
+     */
+    private construirOpciones(): OpcionResponsable[] {
+        const opciones: OpcionResponsable[] = this.miembros.map(miembro => ({
+            idUsuario: miembro.idUsuario,
+            nombre: miembro.nombre
+        }));
+
+        const actual = this.tarea?.idResponsable;
+        if (actual && !opciones.some(opcion => opcion.idUsuario === actual)) {
+            opciones.push({ idUsuario: actual, nombre: 'Ya no es miembro del proyecto' });
+        }
+
+        return opciones;
     }
 
     invalido(control: keyof typeof this.form.controls): boolean {
@@ -68,7 +105,9 @@ export class TableroFormComponent {
         this.guardar.emit({
             titulo: valores.titulo.trim(),
             descripcion: valores.descripcion.trim() || null,
-            prioridad: valores.prioridad
+            prioridad: valores.prioridad,
+            // Siempre viaja: si se omitiera, el PUT dejaria la tarea sin responsable.
+            idResponsable: valores.idResponsable ?? null
         });
     }
 

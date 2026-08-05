@@ -32,8 +32,19 @@
             <div class="flex align-items-center justify-content-between gap-2">
                 <p-tag [value]="tarea.prioridad" [severity]="severidadPrioridad(tarea.prioridad)"
                        styleClass="text-xs"></p-tag>
-                <i *ngIf="tarea.descripcion" class="pi pi-align-left text-500 text-sm"
-                   pTooltip="Tiene descripcion" tooltipPosition="top"></i>
+
+                <div class="flex align-items-center gap-2 flex-shrink-0">
+                    <i *ngIf="tarea.descripcion" class="pi pi-align-left text-500 text-sm"
+                       pTooltip="Tiene descripcion" tooltipPosition="top"></i>
+
+                    <!-- Iniciales y no el nombre: la tarjeta mide 18rem -->
+                    <span *ngIf="tarea.idResponsable"
+                          class="flex align-items-center justify-content-center border-circle surface-300 text-700 font-medium"
+                          style="width: 1.6rem; height: 1.6rem; font-size: .7rem"
+                          [pTooltip]="nombreResponsable(tarea.idResponsable)" tooltipPosition="top">
+                        {{ inicialesResponsable(tarea.idResponsable) }}
+                    </span>
+                </div>
             </div>
         </div>
 
