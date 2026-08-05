@@ -60,6 +60,10 @@ namespace ScrumSoft.Infrastructure
 
             servicios.AddScoped<INotificadorDeTablero, NotificadorDeTablero>();
 
+            // Singleton: la presencia es estado compartido entre todas las conexiones.
+            // Scoped daria una lista vacia por invocacion y nadie veria a nadie.
+            servicios.AddSingleton<RegistroDePresencia>();
+
             // QuestPDF exige declarar la licencia antes de generar el primer documento.
             // Community es gratuita para organizaciones con ingresos bajo un millon de dolares.
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
