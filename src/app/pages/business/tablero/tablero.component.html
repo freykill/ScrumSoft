@@ -2,7 +2,16 @@
 
     <div class="flex flex-column lg:flex-row lg:align-items-center justify-content-between gap-3">
         <div class="flex-1">
-            <h2 class="text-900 text-2xl font-bold m-0">Tablero</h2>
+            <div class="flex align-items-center gap-2">
+                <h2 class="text-900 text-2xl font-bold m-0">Tablero</h2>
+
+                <!-- Se ve de un vistazo si los cambios de los demas van a llegar solos -->
+                <span *ngIf="enVivo" class="flex align-items-center gap-1 text-green-500 text-xs font-medium"
+                      pTooltip="Conectado: los cambios de otros usuarios aparecen solos"
+                      tooltipPosition="right">
+                    <i class="pi pi-circle-fill" style="font-size: .5rem"></i> En vivo
+                </span>
+            </div>
             <p class="text-600 mt-2 mb-0">Arrastra las tarjetas para moverlas de columna o cambiarlas de orden.</p>
         </div>
 

@@ -20,6 +20,11 @@ export class UrlServices {
     // --- Auth ---
     urlLogin = this.apiV1 + '/auth/login';
 
+    // --- Tiempo real (SignalR) ---
+    // Cuelga de la raiz, no de /api/v1: se registra con MapHub en Program.cs
+    // y por eso tampoco aparece en Swagger.
+    urlHubTablero = this.urlApiBackend + '/hubs/tablero';
+
     // --- Proyectos ---
     urlProyectos = this.apiV1 + '/proyectos';
     urlProyecto = (idProyecto: string): string => `${this.urlProyectos}/${idProyecto}`;

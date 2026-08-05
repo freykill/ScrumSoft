@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -6,12 +6,13 @@ import { TOAST_LIFE } from 'src/app/config/app.constants';
 import { Prioridad } from 'src/app/enums';
 import {
     ColumnaConTareasDto,
+    ColumnaDto,
     GuardarTareaComando,
     ProyectoDto,
     SoltarTarea,
     TareaDto
 } from 'src/app/models';
-import { ProyectoService, TareaService } from 'src/app/services';
+import { ProyectoService, TableroRealtimeService, TareaService } from 'src/app/services';
 import { calcularVecinos } from 'src/app/utilities';
 
 /**
@@ -38,7 +39,7 @@ const TOPE_DEL_SELECTOR = 100;
     templateUrl: './tablero.component.html',
     providers: [ConfirmationService]
 })
-export class TableroComponent implements OnInit {
+export class TableroComponent implements OnInit, OnDestroy {
 
     idProyecto = '';
 
@@ -48,6 +49,9 @@ export class TableroComponent implements OnInit {
     columnas: ColumnaConTareasDto[] = [];
     cargando = false;
     guardando = false;
+
+    /** Hay conexion con el hub, o sea que se ven los cambios de los demas. */
+    enVivo = false;
 
     /** Resumen de la cabecera. Se calcula al cargar, no en getters de plantilla. */
     totalTareas = 0;
@@ -66,6 +70,7 @@ export class TableroComponent implements OnInit {
         private readonly router: Router,
         private readonly proyectoService: ProyectoService,
         private readonly tareaService: TareaService,
+        private readonly enVivoService: TableroRealtimeService,
         private readonly confirmacion: ConfirmationService,
         private readonly mensajes: MessageService
     ) { }
@@ -78,6 +83,106 @@ export class TableroComponent implements OnInit {
         this.rutaActiva.paramMap
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(parametros => this.alNavegar(parametros.get('idProyecto') ?? ''));
+
+        this.escucharElHub();
+    }
+
+    ngOnDestroy(): void {
+        // takeUntilDestroyed corta las suscripciones, pero el socket hay que
+        // cerrarlo a mano o se queda escuchando un tablero que ya no se ve.
+        this.enVivoService.desconectar();
+    }
+
+    // ------------------------------------------------------------- en vivo
+
+    /**
+     * Los eventos del hub se aplican con los mismos metodos que las respuestas
+     * del REST, y eso es lo que hace que el eco sea inofensivo: quien mueve una
+     * tarjeta recibe tambien su propio TareaMovida, porque el evento va a todo
+     * el grupo sin excluir al autor. Como `conLaTarea` reemplaza por id y
+     * reordena por `orden`, aplicarlo dos veces da el mismo resultado.
+     */
+    private escucharElHub(): void {
+        this.enVivoService.tareaCambiada
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(tarea => {
+                this.columnas = this.conLaTarea(tarea);
+                this.recalcularResumen();
+            });
+
+        this.enVivoService.tareaEliminada
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(idTarea => {
+                this.columnas = this.sinLaTarea(idTarea);
+                this.recalcularResumen();
+            });
+
+        this.enVivoService.columnasCambiadas
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(columnas => {
+                this.columnas = this.conLasColumnas(columnas);
+                this.recalcularResumen();
+            });
+
+        // No hay historial de eventos: lo que paso mientras estabamos caidos
+        // se perdio, asi que lo unico honesto es volver a pedir el tablero.
+        this.enVivoService.reconectado
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(() => this.cargarTablero());
+
+        this.enVivoService.estadoCambiado
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(vivo => this.enVivo = vivo);
+    }
+
+    private async conectarEnVivo(): Promise<void> {
+        try {
+            await this.enVivoService.conectar(this.idProyecto);
+            this.enVivo = true;
+        } catch (error) {
+            // Sin hub la pantalla funciona igual, solo deja de enterarse de lo
+            // que hacen los demas. No se molesta al usuario con un error por
+            // algo que no le impide trabajar.
+            this.enVivo = false;
+            console.debug('Tiempo real no disponible', error);
+        }
+    }
+
+    /**
+     * Coloca la tarea donde dice el servidor: se quita de donde estuviera y se
+     * mete en su columna, ordenando por `orden`. Vale para crear, editar,
+     * mover y para los eventos del hub, y aplicarla varias veces no cambia
+     * nada, que es lo que la hace segura contra el eco.
+     */
+    private conLaTarea(tarea: TareaDto): ColumnaConTareasDto[] {
+        return this.columnas.map(columna => {
+            const sinElla = columna.tareas.filter(actual => actual.id !== tarea.id);
+
+            return columna.id !== tarea.idColumna
+                ? { ...columna, tareas: sinElla }
+                : { ...columna, tareas: [...sinElla, tarea].sort((una, otra) => una.orden - otra.orden) };
+        });
+    }
+
+    private sinLaTarea(idTarea: string): ColumnaConTareasDto[] {
+        return this.columnas.map(columna => ({
+            ...columna,
+            tareas: columna.tareas.filter(tarea => tarea.id !== idTarea)
+        }));
+    }
+
+    /**
+     * ColumnasActualizadas trae la estructura SIN las tareas, asi que hay que
+     * conservar las que ya estan en pantalla. Una columna nueva entra vacia y
+     * una que desaparecio se lleva sus tareas, que es lo correcto: el backend
+     * no deja borrar una columna con tareas dentro.
+     */
+    private conLasColumnas(columnas: ColumnaDto[]): ColumnaConTareasDto[] {
+        const tareasPorColumna = new Map(this.columnas.map(columna => [columna.id, columna.tareas]));
+
+        return [...columnas]
+            .sort((una, otra) => una.orden - otra.orden)
+            .map(columna => ({ ...columna, tareas: tareasPorColumna.get(columna.id) ?? [] }));
     }
 
     // ------------------------------------------------------------------ carga
@@ -92,6 +197,9 @@ export class TableroComponent implements OnInit {
 
         this.idProyecto = idProyecto;
         await this.cargarTablero();
+
+        // Despues de pintar: primero se ve el tablero, luego se engancha en vivo.
+        await this.conectarEnVivo();
     }
 
     /** El selector se pide una sola vez, no en cada salto de proyecto. */
@@ -196,12 +304,17 @@ export class TableroComponent implements OnInit {
         this.columnas = this.conLaTareaMovida(evento.tarea, evento.idColumnaDestino, evento.indiceDestino);
 
         try {
-            await this.tareaService.mover({
+            const movida = await this.tareaService.mover({
                 idProyecto: this.idProyecto,
                 idTarea: evento.tarea.id,
                 idColumnaDestino: evento.idColumnaDestino,
                 ...vecinos
             });
+
+            // Se aplica el `orden` que asigno el servidor. Sin esto la tarea se
+            // queda con el viejo, y en cuanto llegue cualquier evento del hub
+            // (que reordena por `orden`) la tarjeta saltaria a su sitio anterior.
+            this.columnas = this.conLaTarea(movida);
         } catch (error) {
             this.columnas = previas;
             this.avisarError('No se pudo mover la tarea', error);
@@ -257,7 +370,7 @@ export class TableroComponent implements OnInit {
                     idTarea: this.tareaEnEdicion.id,
                     ...datos
                 });
-                this.columnas = this.conLaTareaReemplazada(actualizada);
+                this.columnas = this.conLaTarea(actualizada);
                 this.avisar('Tarea actualizada', actualizada.titulo);
             } else {
                 const creada = await this.tareaService.crear({
@@ -265,7 +378,7 @@ export class TableroComponent implements OnInit {
                     idColumna: this.columnaDestino!.id,
                     ...datos
                 });
-                this.columnas = this.conLaTareaAnadida(creada);
+                this.columnas = this.conLaTarea(creada);
                 this.avisar('Tarea creada', creada.titulo);
             }
 
@@ -277,21 +390,6 @@ export class TableroComponent implements OnInit {
         } finally {
             this.guardando = false;
         }
-    }
-
-    private conLaTareaReemplazada(tarea: TareaDto): ColumnaConTareasDto[] {
-        return this.columnas.map(columna => ({
-            ...columna,
-            tareas: columna.tareas.map(actual => actual.id === tarea.id ? tarea : actual)
-        }));
-    }
-
-    /** Se coloca por el `orden` que le dio el backend, no siempre al final. */
-    private conLaTareaAnadida(tarea: TareaDto): ColumnaConTareasDto[] {
-        return this.columnas.map(columna => columna.id !== tarea.idColumna
-            ? columna
-            : { ...columna, tareas: [...columna.tareas, tarea].sort((una, otra) => una.orden - otra.orden) }
-        );
     }
 
     // -------------------------------------------------------------- eliminar
@@ -316,10 +414,7 @@ export class TableroComponent implements OnInit {
     private async eliminar(tarea: TareaDto): Promise<void> {
         const previas = this.columnas;
 
-        this.columnas = this.columnas.map(columna => ({
-            ...columna,
-            tareas: columna.tareas.filter(actual => actual.id !== tarea.id)
-        }));
+        this.columnas = this.sinLaTarea(tarea.id);
         this.recalcularResumen();
 
         try {
