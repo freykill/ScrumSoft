@@ -29,7 +29,7 @@
             <th style="width: 10rem">Fin previsto</th>
             <th style="width: 11rem">Estado</th>
             <th style="width: 7rem" class="text-center">Columnas</th>
-            <th style="width: 14rem">Acciones</th>
+            <th style="width: 14rem" class="text-right">Acciones</th>
         </tr>
     </ng-template>
 
@@ -46,7 +46,8 @@
                        [severity]="severidadEstado(proyecto.estadoProyecto)"></p-tag>
             </td>
             <td class="text-center text-600">{{ proyecto.cantidadColumnas }}</td>
-            <td class="text-right flex">
+            <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
+            <td class="flex justify-content-end">
                 <button pButton pRipple icon="pi pi-table" pTooltip="Ver tablero" tooltipPosition="top"
                         class="p-button-text p-button-rounded mr-1"
                         (click)="verTablero.emit(proyecto)"></button>

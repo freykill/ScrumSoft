@@ -5,12 +5,14 @@
            class="text-600 hover:text-primary no-underline text-sm inline-flex align-items-center gap-1 mb-2">
             <i class="pi pi-arrow-left text-xs"></i> Proyectos
         </a>
-        <h2 class="text-900 text-2xl font-bold m-0">Columnas de {{ nombreProyecto }}</h2>
+        <!-- El nombre llega con el tablero; mientras carga no se deja el titulo cojo -->
+        <h2 class="text-900 text-2xl font-bold m-0">Columnas de {{ nombreProyecto || 'este proyecto' }}</h2>
         <p class="text-600 mt-2 mb-0">Las etapas del tablero. El orden de aqui es el orden en que se ven.</p>
     </div>
 
     <div class="flex-shrink-0 flex gap-2">
-        <button pButton pRipple icon="pi pi-table" label="Ver tablero" class="p-button-outlined"></button>
+        <button pButton pRipple icon="pi pi-table" label="Ver tablero" class="p-button-outlined"
+            (click)="verTablero()"></button>
         <button pButton pRipple icon="pi pi-plus" label="Nueva columna" (click)="nueva()"></button>
     </div>
 </div>

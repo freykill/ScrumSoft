@@ -5,7 +5,8 @@ import {
     CrearProyectoComando,
     ProyectoDto,
     ProyectoDtoPagedResult,
-    ProyectoFiltros
+    ProyectoFiltros,
+    TableroDto
 } from '../models';
 
 /**
@@ -71,6 +72,20 @@ export class ProyectoService {
     eliminar(idProyecto: string): Promise<void> {
         return this.genericService.genericCallServices<void>(
             METHODS.DELETE, this.urlService.urlProyecto(idProyecto)
+        );
+    }
+
+    /**
+     * Tablero completo del proyecto: nombre, columnas y las tareas de cada una.
+     *
+     * Es el unico GET que devuelve columnas. La API no tiene
+     * GET /proyectos/{id}/columnas (solo POST, PUT y DELETE), asi que la
+     * pantalla de administracion de columnas tambien se sirve de aqui: coge
+     * las columnas y cuenta las tareas para saber cuales se pueden borrar.
+     */
+    obtenerTablero(idProyecto: string): Promise<TableroDto> {
+        return this.genericService.genericCallServices<TableroDto>(
+            METHODS.GET, this.urlService.urlProyectoTablero(idProyecto)
         );
     }
 }
