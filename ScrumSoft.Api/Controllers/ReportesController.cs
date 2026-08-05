@@ -28,7 +28,8 @@ namespace ScrumSoft.Api.Controllers
             [FromQuery] FormatoDeReporte formato,
             CancellationToken cancelacion,
             [FromQuery] Guid? idResponsable = null,
-            [FromQuery] Prioridad? prioridad = null)
+            [FromQuery] Prioridad? prioridad = null,
+            [FromQuery] string? texto = null)
         {
             var archivo = await mediador.EnviarAsync(
                 new GenerarReporteConsulta
@@ -36,7 +37,8 @@ namespace ScrumSoft.Api.Controllers
                     IdProyecto = idProyecto,
                     Formato = formato,
                     IdResponsable = idResponsable,
-                    Prioridad = prioridad
+                    Prioridad = prioridad,
+                    Texto = texto
                 },
                 cancelacion);
 

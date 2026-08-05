@@ -12,5 +12,8 @@ namespace ScrumSoft.Application.Tablero
         public Guid? IdResponsable { get; init; }
 
         public Prioridad? Prioridad { get; init; }
+
+        // Busca en el titulo y en la descripcion de la tarea.
+        public string? Texto { get; init; }
     }
 }

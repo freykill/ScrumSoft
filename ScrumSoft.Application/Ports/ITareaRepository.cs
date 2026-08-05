@@ -19,6 +19,7 @@ namespace ScrumSoft.Application.Ports
             Guid idProyecto,
             Guid? idResponsable = null,
             Prioridad? prioridad = null,
+            string? texto = null,
             CancellationToken cancelacion = default);
 
         // El dato que el dominio necesita para decidir si una columna se puede eliminar.

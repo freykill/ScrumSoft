@@ -37,13 +37,15 @@ namespace ScrumSoft.Api.Controllers
             Guid idProyecto,
             CancellationToken cancelacion,
             [FromQuery] Guid? idResponsable = null,
-            [FromQuery] Prioridad? prioridad = null) =>
+            [FromQuery] Prioridad? prioridad = null,
+            [FromQuery] string? texto = null) =>
             Ok(await mediador.EnviarAsync(
                 new ObtenerTableroConsulta
                 {
                     IdProyecto = idProyecto,
                     IdResponsable = idResponsable,
-                    Prioridad = prioridad
+                    Prioridad = prioridad,
+                    Texto = texto
                 },
                 cancelacion));
 

@@ -50,6 +50,7 @@ namespace ScrumSoft.Application.Reportes
                     peticion.IdProyecto,
                     peticion.IdResponsable,
                     peticion.Prioridad,
+                    peticion.Texto,
                     cancelacion)
                 .ConfigureAwait(false);
 

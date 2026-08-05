@@ -26,6 +26,7 @@ namespace ScrumSoft.Application.Tablero
                     peticion.IdProyecto,
                     peticion.IdResponsable,
                     peticion.Prioridad,
+                    peticion.Texto,
                     cancelacion)
                 .ConfigureAwait(false);
 

@@ -33,6 +33,7 @@ namespace ScrumSoft.Infrastructure.Persistence.Repositories
             Guid idProyecto,
             Guid? idResponsable = null,
             Prioridad? prioridad = null,
+            string? texto = null,
             CancellationToken cancelacion = default)
         {
             var consulta = contexto.Tareas
@@ -47,6 +48,20 @@ namespace ScrumSoft.Infrastructure.Persistence.Repositories
 
             if (prioridad is { } nivel)
                 consulta = consulta.Where(t => t.Prioridad == nivel);
+
+            // Se normaliza aqui y no en cada caso de uso: el tablero y el reporte
+            // comparten este metodo, y hacerlo dos veces es una oportunidad de que
+            // uno recorte los espacios y el otro no, devolviendo listas distintas.
+            if (!string.IsNullOrWhiteSpace(texto))
+            {
+                var patron = $"%{texto.Trim()}%";
+
+                // Titulo y descripcion con la misma cadena: quien busca no sabe
+                // en cual de los dos campos quedo lo que escribio.
+                consulta = consulta.Where(t =>
+                    EF.Functions.ILike(t.Titulo, patron) ||
+                    (t.Descripcion != null && EF.Functions.ILike(t.Descripcion, patron)));
+            }
 
             return await consulta
                 .OrderBy(t => t.Orden)

@@ -24,5 +24,7 @@ namespace ScrumSoft.Application.Reportes
         public Guid? IdResponsable { get; init; }
 
         public Prioridad? Prioridad { get; init; }
+
+        public string? Texto { get; init; }
     }
 }
