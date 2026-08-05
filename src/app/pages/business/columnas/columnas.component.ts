@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TOAST_LIFE } from 'src/app/config/app.constants';
 import { ColumnaDto } from 'src/app/models';
@@ -35,6 +35,7 @@ export class ColumnasComponent implements OnInit {
 
     constructor(
         private readonly rutaActiva: ActivatedRoute,
+        private readonly router: Router,
         private readonly columnaService: ColumnaService,
         private readonly confirmacion: ConfirmationService,
         private readonly mensajes: MessageService
@@ -203,12 +204,8 @@ export class ColumnasComponent implements OnInit {
     // ------------------------------------------------------------- navegacion
 
     verTablero(): void {
-        // TODO: navegar a /business/proyectos/:id/tablero cuando exista la pantalla.
-        this.mensajes.add({
-            severity: 'info',
-            summary: 'Tablero pendiente',
-            detail: 'El tablero de este proyecto todavia no esta construido.',
-            life: TOAST_LIFE
+        this.router.navigate(['/business/proyectos', this.idProyecto, 'tablero'], {
+            state: { nombreProyecto: this.nombreProyecto }
         });
     }
 

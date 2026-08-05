@@ -41,3 +41,27 @@ export interface MoverTareaComando {
     idTareaAnterior?: string | null;
     idTareaSiguiente?: string | null;
 }
+
+/**
+ * Lo que emite el formulario de tarea. El contenedor le pone los ids segun
+ * si es alta o edicion: al crear hace falta la columna, al editar no, porque
+ * ActualizarTareaComando no puede mover una tarea de sitio.
+ */
+export interface GuardarTareaComando {
+    titulo: string;
+    descripcion?: string | null;
+    prioridad: Prioridad;
+}
+
+/**
+ * Lo que reporta una columna del tablero cuando sueltan una tarjeta encima.
+ * El indice lo traduce la columna, que es quien habla con el CDK; el
+ * contenedor solo entiende de tareas y columnas.
+ */
+export interface SoltarTarea {
+    tarea: TareaDto;
+    idColumnaOrigen: string;
+    idColumnaDestino: string;
+    indiceOrigen: number;
+    indiceDestino: number;
+}

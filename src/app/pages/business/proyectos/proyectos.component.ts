@@ -223,12 +223,8 @@ export class ProyectosComponent implements OnInit {
     }
 
     verTablero(proyecto: ProyectoDto): void {
-        // TODO: navegar a /business/proyectos/:id/tablero cuando exista la pantalla.
-        this.mensajes.add({
-            severity: 'info',
-            summary: 'Tablero pendiente',
-            detail: `El tablero de ${proyecto.nombre} todavia no esta construido.`,
-            life: TOAST_LIFE
+        this.router.navigate(['/business/proyectos', proyecto.id, 'tablero'], {
+            state: { nombreProyecto: proyecto.nombre }
         });
     }
 

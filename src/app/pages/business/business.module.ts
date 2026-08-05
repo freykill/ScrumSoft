@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { ButtonModule } from 'primeng/button';
@@ -11,6 +12,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { PasswordModule } from 'primeng/password';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { RippleModule } from 'primeng/ripple';
 import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -23,6 +25,9 @@ import { ColumnasListComponent } from './columnas/columnas-list/columnas-list.co
 import { ProyectosComponent } from './proyectos/proyectos.component';
 import { ProyectosFormComponent } from './proyectos/proyectos-form/proyectos-form.component';
 import { ProyectosListComponent } from './proyectos/proyectos-list/proyectos-list.component';
+import { TableroComponent } from './tablero/tablero.component';
+import { TableroColumnaComponent } from './tablero/tablero-columna/tablero-columna.component';
+import { TableroFormComponent } from './tablero/tablero-form/tablero-form.component';
 import { UsuariosComponent } from './usuarios/usuarios.component';
 import { UsuariosFormComponent } from './usuarios/usuarios-form/usuarios-form.component';
 import { UsuariosListComponent } from './usuarios/usuarios-list/usuarios-list.component';
@@ -42,12 +47,16 @@ import { UsuariosListComponent } from './usuarios/usuarios-list/usuarios-list.co
         ColumnasComponent,
         ColumnasListComponent,
         ColumnasFormComponent,
+        TableroComponent,
+        TableroColumnaComponent,
+        TableroFormComponent,
         UsuariosComponent,
         UsuariosListComponent,
         UsuariosFormComponent
     ],
     imports: [
         CommonModule,
+        DragDropModule,
         FormsModule,
         ReactiveFormsModule,
         BusinessRoutingModule,
@@ -60,6 +69,7 @@ import { UsuariosListComponent } from './usuarios/usuarios-list/usuarios-list.co
         InputTextModule,
         InputTextareaModule,
         PasswordModule,
+        ProgressSpinnerModule,
         RippleModule,
         TableModule,
         TagModule,
