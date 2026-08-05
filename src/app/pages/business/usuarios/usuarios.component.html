@@ -12,35 +12,23 @@
 
 <div class="surface-card border-1 surface-border border-round-xl overflow-hidden">
 
-    <!-- Barra de filtros -->
-    <div class="p-3 border-bottom-1 surface-border flex flex-column lg:flex-row gap-2 lg:align-items-center justify-content-between">
-
+    <!--
+        Un solo buscador: la API expone `Filtro` y nada mas. Habia dropdowns de
+        rol y de estado, pero el estado no existe en UsuarioDto y filtrar el rol
+        en cliente solo afectaria a la pagina cargada.
+    -->
+    <div class="p-3 border-bottom-1 surface-border">
         <span class="p-input-icon-left w-full lg:w-30rem">
             <i class="pi pi-search"></i>
             <input pInputText type="text" class="w-full" placeholder="Buscar por nombre o correo"
-                [(ngModel)]="filtros.busqueda" (ngModelChange)="aplicarFiltros()">
+                [(ngModel)]="filtros.filtro" (ngModelChange)="buscar($event)">
         </span>
-
-        <div class="flex flex-column sm:flex-row gap-2 ">
-            <p-dropdown [options]="opcionesRol" optionLabel="label" optionValue="value" placeholder="Todos los roles"
-                [showClear]="true" styleClass="w-full sm:w-16rem" [(ngModel)]="filtros.rol"
-                (ngModelChange)="aplicarFiltros()"></p-dropdown>
-
-            <p-dropdown [options]="opcionesEstado" optionLabel="label" optionValue="value"
-                placeholder="Todos los estados" [showClear]="true" styleClass="w-full sm:w-16rem"
-                [(ngModel)]="filtros.estado" (ngModelChange)="aplicarFiltros()"></p-dropdown>
-<!-- 
-            <button pButton pRipple type="button" icon="pi pi-filter-slash" class="p-button-text"
-                pTooltip="Limpiar filtros" tooltipPosition="top" [disabled]="!hayFiltrosActivos"
-                (click)="limpiarFiltros()"></button> -->
-        </div>
     </div>
 
-    <app-usuarios-list [usuarios]="usuariosVisibles" [cargando]="cargando" (editar)="editar($event)"
-        (eliminar)="confirmarEliminacion($event)"></app-usuarios-list>
+    <app-usuarios-list [usuarios]="usuarios" [cargando]="cargando" [totalElementos]="totalElementos"
+        [primeraFila]="primeraFila" [filasPorPagina]="filtros.tamanoPagina!"
+        (paginar)="paginar($event)" (editar)="editar($event)"></app-usuarios-list>
 </div>
 
 <app-usuarios-form [(visible)]="mostrarFormulario" [usuario]="usuarioEnEdicion" [guardando]="guardando"
     (guardar)="guardar($event)"></app-usuarios-form>
-
-<p-confirmDialog [style]="{ width: '28rem' }"></p-confirmDialog>

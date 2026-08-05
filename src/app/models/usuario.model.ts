@@ -1,34 +1,55 @@
 import { RolUsuario } from '../enums';
+import { ResultadoPaginado } from './paginacion.model';
 
-/**
- * Usuario del sistema.
- * OJO: la API que nos pasaron todavia no expone endpoints de usuarios,
- * este modelo sale de la tabla `usuarios` del modelo de datos.
- */
+/** GET /api/v1/usuarios */
 export interface UsuarioDto {
     id: string;
     nombre: string;
     correoElectronico: string;
     rol: RolUsuario;
-    /** 'A' activo, 'E' eliminado (borrado logico) */
-    estadoRegistro: string;
-    fechaCreacion: string;
-    fechaActualizacion?: string | null;
 }
 
-/** Lo que se manda al crear o editar. La clave viaja en claro, el hash lo hace el backend. */
-export interface GuardarUsuarioComando {
+export type UsuarioDtoPagedResult = ResultadoPaginado<UsuarioDto>;
+
+/** Query params del GET /api/v1/usuarios */
+export interface UsuarioFiltros {
+    /** Un solo campo de texto; el backend decide si busca por nombre o correo. */
+    filtro?: string;
+    pagina?: number;
+    tamanoPagina?: number;
+}
+
+/** POST /api/v1/usuarios */
+export interface CrearUsuarioComando {
     nombre: string;
     correoElectronico: string;
+    /** Viaja en claro, el hash lo hace el backend. */
+    contrasena: string;
     rol: RolUsuario;
-    /** En edicion es opcional: si no viene, la clave no se toca. */
-    clave?: string;
 }
 
-/** Estado de los filtros de la lista. `null` = sin filtrar por ese campo. */
-export interface UsuarioFiltros {
-    busqueda: string;
-    rol: RolUsuario | null;
-    /** 'A' | 'E' */
-    estado: string | null;
+/**
+ * PUT /api/v1/usuarios/{id}
+ *
+ * Solo nombre y rol. El correo no se puede cambiar porque es con lo que se
+ * inicia sesion, y la contrasena no tiene endpoint: no hay cambio de clave.
+ */
+export interface ActualizarUsuarioComando {
+    id: string;
+    nombre: string;
+    rol: RolUsuario;
+}
+
+/**
+ * Lo que emite el formulario. El contenedor lo traduce a uno u otro comando
+ * segun el modo, porque la API pide campos distintos: al crear van correo y
+ * contrasena, al editar no existen.
+ */
+export interface GuardarUsuarioComando {
+    nombre: string;
+    rol: RolUsuario;
+    /** Solo en alta. */
+    correoElectronico?: string;
+    /** Solo en alta. */
+    contrasena?: string;
 }

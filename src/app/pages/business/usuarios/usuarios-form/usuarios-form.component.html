@@ -18,7 +18,8 @@
             <small class="p-error" *ngIf="invalido('nombre')">Escribe al menos 3 caracteres.</small>
         </div>
 
-        <div class="flex flex-column gap-2">
+        <!-- Solo al crear: el correo es con lo que se inicia sesion y el PUT no lo acepta -->
+        <div class="flex flex-column gap-2" *ngIf="esNuevo">
             <label for="correo" class="font-medium text-900">Correo electronico</label>
             <input pInputText id="correo" formControlName="correoElectronico" autocomplete="off"
                    placeholder="usuario@scrumsoft.com"
@@ -26,20 +27,28 @@
             <small class="p-error" *ngIf="invalido('correoElectronico')">Escribe un correo valido.</small>
         </div>
 
-        <div class="flex flex-column gap-2">
-            <label for="rol" class="font-medium text-900">Rol</label>
-            <p-dropdown inputId="rol" formControlName="rol" [options]="opcionesRol"
-                        optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+        <!-- En edicion se muestra apagado, para saber de quien es la ficha -->
+        <div class="flex flex-column gap-2" *ngIf="!esNuevo">
+            <label class="font-medium text-900">Correo electronico</label>
+            <span class="text-600">{{ usuario?.correoElectronico }}</span>
+            <small class="text-500">No se puede cambiar: es con lo que inicia sesion.</small>
+        </div>
+
+        <!-- Solo al crear: no hay endpoint para cambiar la contrasena -->
+        <div class="flex flex-column gap-2" *ngIf="esNuevo">
+            <label for="contrasena" class="font-medium text-900">Contrasena</label>
+            <p-password inputId="contrasena" formControlName="contrasena" [toggleMask]="true" [feedback]="false"
+                        styleClass="w-full" inputStyleClass="w-full" autocomplete="new-password"></p-password>
+            <small class="p-error" *ngIf="invalido('contrasena')">Minimo 6 caracteres.</small>
         </div>
 
         <div class="flex flex-column gap-2">
-            <label for="clave" class="font-medium text-900">
-                Contrasena
-                <span class="text-500 font-normal" *ngIf="!esNuevo">(dejala vacia para no cambiarla)</span>
-            </label>
-            <p-password inputId="clave" formControlName="clave" [toggleMask]="true" [feedback]="false"
-                        styleClass="w-full" inputStyleClass="w-full" autocomplete="new-password"></p-password>
-            <small class="p-error" *ngIf="invalido('clave')">Minimo 6 caracteres.</small>
+            <label for="rol" class="font-medium text-900">Rol</label>
+            <p-dropdown inputId="rol" formControlName="rol" appendTo="body" [options]="opcionesRol"
+                        optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+            <small class="text-600">
+                Administrador puede crear y borrar proyectos y gestionar miembros.
+            </small>
         </div>
     </form>
 

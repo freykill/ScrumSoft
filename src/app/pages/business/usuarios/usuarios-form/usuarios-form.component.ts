@@ -6,8 +6,13 @@ import { GuardarUsuarioComando, UsuarioDto } from 'src/app/models';
 /**
  * Presentacional. El dialogo de alta / edicion.
  *
- * Tiene su propio FormGroup porque la validacion es asunto del formulario,
- * pero no guarda nada: emite el comando y el contenedor decide que hacer.
+ * El formulario cambia segun el modo porque la API pide cosas distintas:
+ *   POST  nombre, correoElectronico, contrasena, rol
+ *   PUT   nombre, rol  (y nada mas)
+ *
+ * Asi que al editar, correo y contrasena ni se muestran: el correo es con lo
+ * que se inicia sesion y no se puede cambiar, y no existe endpoint de cambio
+ * de clave. Un campo ahi que no hiciera nada seria peor que no tenerlo.
  */
 @Component({
     selector: 'app-usuarios-form',
@@ -28,8 +33,8 @@ export class UsuariosFormComponent {
     readonly form = this.fb.nonNullable.group({
         nombre: ['', [Validators.required, Validators.minLength(3)]],
         correoElectronico: ['', [Validators.required, Validators.email]],
-        rol: [RolUsuario.Miembro, Validators.required],
-        clave: ['', [Validators.required, Validators.minLength(6)]]
+        contrasena: ['', [Validators.required, Validators.minLength(6)]],
+        rol: [RolUsuario.Miembro, Validators.required]
     });
 
     constructor(private readonly fb: FormBuilder) { }
@@ -45,20 +50,33 @@ export class UsuariosFormComponent {
      * quedaria con lo que se escribio la vez anterior.
      */
     reiniciar(): void {
+        const correo = this.form.controls.correoElectronico;
+        const contrasena = this.form.controls.contrasena;
+
+        // Los validadores se ajustan antes del reset: es el reset el que
+        // recalcula la validez.
         if (this.usuario) {
+            // En edicion no viajan, asi que no pueden bloquear el guardado.
+            correo.clearValidators();
+            contrasena.clearValidators();
+
             this.form.reset({
                 nombre: this.usuario.nombre,
                 correoElectronico: this.usuario.correoElectronico,
-                rol: this.usuario.rol,
-                clave: ''
+                contrasena: '',
+                rol: this.usuario.rol
             });
-            // En edicion la clave es opcional: vacia significa "no la cambies".
-            this.form.controls.clave.removeValidators(Validators.required);
         } else {
-            this.form.reset({ nombre: '', correoElectronico: '', rol: RolUsuario.Miembro, clave: '' });
-            this.form.controls.clave.addValidators(Validators.required);
+            correo.setValidators([Validators.required, Validators.email]);
+            contrasena.setValidators([Validators.required, Validators.minLength(6)]);
+
+            this.form.reset({
+                nombre: '',
+                correoElectronico: '',
+                contrasena: '',
+                rol: RolUsuario.Miembro
+            });
         }
-        this.form.controls.clave.updateValueAndValidity();
     }
 
     invalido(control: keyof typeof this.form.controls): boolean {
@@ -71,13 +89,17 @@ export class UsuariosFormComponent {
             this.form.markAllAsTouched();
             return;
         }
-        const { nombre, correoElectronico, rol, clave } = this.form.getRawValue();
+        const valores = this.form.getRawValue();
+
         this.guardar.emit({
-            nombre: nombre.trim(),
-            correoElectronico: correoElectronico.trim().toLowerCase(),
-            rol,
-            // En edicion, si no escribio clave no se manda el campo.
-            clave: clave ? clave : undefined
+            nombre: valores.nombre.trim(),
+            rol: valores.rol,
+            ...(this.esNuevo
+                ? {
+                    correoElectronico: valores.correoElectronico.trim().toLowerCase(),
+                    contrasena: valores.contrasena
+                }
+                : {})
         });
     }
 

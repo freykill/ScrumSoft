@@ -1,20 +1,29 @@
+<!--
+    Sin cabeceras ordenables: en modo lazy el orden lo resolveria el servidor y
+    el GET de usuarios no recibe parametro de orden. Sin papelera tampoco: la
+    API no tiene DELETE de usuarios.
+-->
 <p-table [value]="usuarios"
+         [lazy]="true"
+         [lazyLoadOnInit]="false"
+         (onLazyLoad)="alPaginar($event)"
          [loading]="cargando"
+         [paginator]="true"
+         [first]="primeraFila"
          [rows]="filasPorPagina"
-         [paginator]="usuarios.length > filasPorPagina"
+         [totalRecords]="totalElementos"
          [rowsPerPageOptions]="opcionesPagina"
          [showCurrentPageReport]="true"
          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} usuarios"
          styleClass="p-datatable-sm"
-         [tableStyle]="{ 'min-width': '50rem' }">
+         [tableStyle]="{ 'min-width': '45rem' }">
 
     <ng-template pTemplate="header">
         <tr>
-            <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
-            <th pSortableColumn="correoElectronico">Correo <p-sortIcon field="correoElectronico"></p-sortIcon></th>
-            <th pSortableColumn="rol" style="width: 10rem">Rol <p-sortIcon field="rol"></p-sortIcon></th>
-            <th style="width: 9rem">Estado</th>
-            <th style="width: 8rem">Acciones</th>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th style="width: 11rem">Rol</th>
+            <th style="width: 7rem" class="text-right">Acciones</th>
         </tr>
     </ng-template>
 
@@ -25,28 +34,20 @@
             <td>
                 <p-tag [value]="usuario.rol" [severity]="severidadRol(usuario.rol)"></p-tag>
             </td>
-            <td>
-                <p-tag [value]="esActivo(usuario) ? 'Activo' : 'Eliminado'"
-                       [severity]="esActivo(usuario) ? 'success' : 'danger'"></p-tag>
-            </td>
-            <td class=" flex">
-                <button pButton pRipple icon="pi pi-pencil " pTooltip="Editar" tooltipPosition="top"
-                        class="p-button-text p-button-rounded "
-                        [disabled]="!esActivo(usuario)"
+            <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
+            <td class="flex justify-content-end">
+                <button pButton pRipple icon="pi pi-pencil" pTooltip="Editar nombre y rol" tooltipPosition="top"
+                        class="p-button-text p-button-rounded"
                         (click)="editar.emit(usuario)"></button>
-                <button pButton pRipple icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top"
-                        class="p-button-text p-button-rounded p-button-danger"
-                        [disabled]="!esActivo(usuario)"
-                        (click)="eliminar.emit(usuario)"></button>
             </td>
         </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
         <tr>
-            <td colspan="5" class="text-center py-6">
+            <td colspan="4" class="text-center py-6">
                 <i class="pi pi-users text-4xl text-300 block mb-3"></i>
-                <span class="text-600">No hay usuarios que coincidan con la busqueda.</span>
+                <span class="text-600">No hay usuarios para mostrar.</span>
             </td>
         </tr>
     </ng-template>

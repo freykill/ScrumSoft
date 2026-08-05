@@ -33,6 +33,10 @@ export class UrlServices {
     urlColumna = (idProyecto: string, idColumna: string): string => `${this.urlColumnas(idProyecto)}/${idColumna}`;
     urlColumnasOrden = (idProyecto: string): string => `${this.urlColumnas(idProyecto)}/orden`;
 
+    // --- Usuarios (listar, crear y editar; no hay baja) ---
+    urlUsuarios = this.apiV1 + '/usuarios';
+    urlUsuario = (idUsuario: string): string => `${this.urlUsuarios}/${idUsuario}`;
+
     // --- Tareas ---
     urlTareas = (idProyecto: string): string => `${this.urlProyecto(idProyecto)}/tareas`;
     urlTarea = (idProyecto: string, idTarea: string): string => `${this.urlTareas(idProyecto)}/${idTarea}`;
