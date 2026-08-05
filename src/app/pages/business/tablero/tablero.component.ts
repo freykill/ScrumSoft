@@ -39,6 +39,16 @@ const TOPE_DEL_SELECTOR = 100;
  */
 const ESPERA_DE_RECARGA = 300;
 
+/** Colores de los avatares de presencia. Se reparten por el id del usuario. */
+const COLORES_DE_PRESENCIA = [
+    'bg-blue-500',
+    'bg-green-500',
+    'bg-orange-500',
+    'bg-purple-500',
+    'bg-cyan-600',
+    'bg-pink-500'
+];
+
 /**
  * Tablero de UN proyecto, con selector para saltar entre ellos.
  *
@@ -95,10 +105,13 @@ export class TableroComponent implements OnInit, OnDestroy {
     enVivo = false;
 
     /**
-     * Quien MAS esta viendo este tablero. Uno mismo se excluye: la gracia es
-     * saber que no estas solo, y verte a ti en la lista no aporta nada.
+     * Quien esta viendo este tablero, incluido uno mismo.
+     *
+     * Se incluye a proposito: si solo se mostraran los demas, con una sola
+     * sesion abierta no se veria nada y pareceria que la funcion no existe.
+     * Asi el bloque siempre esta, y el texto dice cuantos son.
      */
-    otrosViendo: UsuarioConectado[] = [];
+    conectados: UsuarioConectado[] = [];
 
     /** Resumen de la cabecera. Se calcula al cargar, no en getters de plantilla. */
     totalTareas = 0;
@@ -195,10 +208,7 @@ export class TableroComponent implements OnInit, OnDestroy {
 
         this.enVivoService.usuariosConectados
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(usuarios => {
-                const yo = this.auth.idUsuario;
-                this.otrosViendo = usuarios.filter(usuario => usuario.idUsuario !== yo);
-            });
+            .subscribe(usuarios => this.conectados = usuarios);
 
         this.enVivoService.estadoCambiado
             .pipe(takeUntilDestroyed(this.destroyRef))
@@ -207,7 +217,7 @@ export class TableroComponent implements OnInit, OnDestroy {
 
                 // Sin conexion no se sabe quien sigue ahi; mejor no mostrar a
                 // gente que a lo mejor se fue hace rato.
-                if (!vivo) { this.otrosViendo = []; }
+                if (!vivo) { this.conectados = []; }
             });
     }
 
@@ -216,9 +226,29 @@ export class TableroComponent implements OnInit, OnDestroy {
         return iniciales(nombre);
     }
 
+    /**
+     * Color estable por usuario: sale del id, asi la misma persona sale del
+     * mismo color en todas las ventanas y se la reconoce de un vistazo.
+     */
+    colorDe(idUsuario: string): string {
+        const suma = [...idUsuario].reduce((total, caracter) => total + caracter.charCodeAt(0), 0);
+        return COLORES_DE_PRESENCIA[suma % COLORES_DE_PRESENCIA.length];
+    }
+
+    /** Texto explicito: los avatares solos se pueden malinterpretar. */
+    get textoDePresencia(): string {
+        return this.conectados.length > 1
+            ? `${this.conectados.length} personas viendo este tablero`
+            : 'Solo tu viendo este tablero';
+    }
+
     /** Devuelve un string, no un array: no crea referencias nuevas por ciclo. */
-    get nombresDeOtros(): string {
-        return this.otrosViendo.map(usuario => usuario.nombre).join(', ');
+    get nombresConectados(): string {
+        const yo = this.auth.idUsuario;
+
+        return this.conectados
+            .map(usuario => usuario.idUsuario === yo ? `${usuario.nombre} (tu)` : usuario.nombre)
+            .join(', ');
     }
 
     /**
@@ -308,7 +338,7 @@ export class TableroComponent implements OnInit, OnDestroy {
 
         // Al saltar de tablero, los de antes ya no aplican. El hub mandara la
         // lista del nuevo al suscribirse.
-        this.otrosViendo = [];
+        this.conectados = [];
 
         // En paralelo: son independientes y asi se espera una ida y vuelta en
         // vez de dos. Los miembros hacen falta para el selector de responsable.
