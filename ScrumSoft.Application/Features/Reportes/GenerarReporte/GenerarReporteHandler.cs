@@ -25,7 +25,7 @@ namespace ScrumSoft.Application.Reportes
             var exportador = exportadores.FirstOrDefault(e => e.Formato == peticion.Formato)
                 ?? throw new DomainException($"No hay un exportador registrado para el formato {peticion.Formato}.");
 
-            var reporte = await ArmarAsync(peticion.IdProyecto, cancelacion).ConfigureAwait(false);
+            var reporte = await ArmarAsync(peticion, cancelacion).ConfigureAwait(false);
 
             return new ArchivoDeReporte
             {
@@ -35,11 +35,23 @@ namespace ScrumSoft.Application.Reportes
             };
         }
 
-        private async Task<ReporteProyectoDto> ArmarAsync(Guid idProyecto, CancellationToken cancelacion)
+        private async Task<ReporteProyectoDto> ArmarAsync(
+            GenerarReporteConsulta peticion,
+            CancellationToken cancelacion)
         {
-            var proyecto = await acceso.ObtenerConAccesoAsync(idProyecto, cancelacion).ConfigureAwait(false);
+            var proyecto = await acceso
+                .ObtenerConAccesoAsync(peticion.IdProyecto, cancelacion)
+                .ConfigureAwait(false);
 
-            var todas = await tareas.ListarPorProyectoAsync(idProyecto, cancelacion).ConfigureAwait(false);
+            // La misma consulta y los mismos filtros que usa el tablero: por eso el
+            // archivo descargado coincide con lo que el usuario tiene en pantalla.
+            var todas = await tareas
+                .ListarPorProyectoAsync(
+                    peticion.IdProyecto,
+                    peticion.IdResponsable,
+                    peticion.Prioridad,
+                    cancelacion)
+                .ConfigureAwait(false);
 
             // Los responsables se traen de una sola vez, no uno por tarea.
             var idsResponsables = todas

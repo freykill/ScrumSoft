@@ -4,6 +4,7 @@ using ScrumSoft.Application.Common;
 using ScrumSoft.Application.Mediador;
 using ScrumSoft.Application.Proyectos;
 using ScrumSoft.Application.Tablero;
+using ScrumSoft.Domain.Enums;
 
 namespace ScrumSoft.Api.Controllers
 {
@@ -24,14 +25,27 @@ namespace ScrumSoft.Api.Controllers
             Ok(await mediador.EnviarAsync(consulta, cancelacion));
 
         /// <summary>Devuelve el tablero completo: columnas en orden con sus tareas.</summary>
+        /// <remarks>
+        /// Los filtros son opcionales y se resuelven en el servidor. El reporte acepta
+        /// los mismos dos, asi que descargarlo con el tablero filtrado da el mismo contenido.
+        /// </remarks>
         [HttpGet("{idProyecto:guid}/tablero")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult<TableroDto>> Tablero(
             [FromServices] IMediador mediador,
             Guid idProyecto,
-            CancellationToken cancelacion) =>
-            Ok(await mediador.EnviarAsync(new ObtenerTableroConsulta { IdProyecto = idProyecto }, cancelacion));
+            CancellationToken cancelacion,
+            [FromQuery] Guid? idResponsable = null,
+            [FromQuery] Prioridad? prioridad = null) =>
+            Ok(await mediador.EnviarAsync(
+                new ObtenerTableroConsulta
+                {
+                    IdProyecto = idProyecto,
+                    IdResponsable = idResponsable,
+                    Prioridad = prioridad
+                },
+                cancelacion));
 
         /// <summary>Crea un proyecto con su flujo de trabajo inicial.</summary>
         [HttpPost]

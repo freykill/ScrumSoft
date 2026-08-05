@@ -20,8 +20,13 @@ namespace ScrumSoft.Application.Tablero
                 .ConfigureAwait(false);
 
             // Una sola consulta para todas las tareas del proyecto, no una por columna.
+            // Los filtros los aplica el repositorio en SQL, no este metodo en memoria.
             var todas = await tareas
-                .ListarPorProyectoAsync(peticion.IdProyecto, cancelacion)
+                .ListarPorProyectoAsync(
+                    peticion.IdProyecto,
+                    peticion.IdResponsable,
+                    peticion.Prioridad,
+                    cancelacion)
                 .ConfigureAwait(false);
 
             var porColumna = todas

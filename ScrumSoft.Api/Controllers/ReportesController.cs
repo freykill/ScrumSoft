@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ScrumSoft.Application.Mediador;
 using ScrumSoft.Application.Ports;
 using ScrumSoft.Application.Reportes;
+using ScrumSoft.Domain.Enums;
 
 namespace ScrumSoft.Api.Controllers
 {
@@ -14,7 +15,8 @@ namespace ScrumSoft.Api.Controllers
         /// <summary>Descarga el reporte del proyecto en el formato indicado.</summary>
         /// <remarks>
         /// Los dos formatos salen de la misma consulta y la misma estructura de datos:
-        /// solo cambia el exportador que la recibe.
+        /// solo cambia el exportador que la recibe. Acepta los mismos filtros que el
+        /// tablero, para que el archivo coincida con lo que se esta viendo en pantalla.
         /// </remarks>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -24,10 +26,18 @@ namespace ScrumSoft.Api.Controllers
             [FromServices] IMediador mediador,
             Guid idProyecto,
             [FromQuery] FormatoDeReporte formato,
-            CancellationToken cancelacion)
+            CancellationToken cancelacion,
+            [FromQuery] Guid? idResponsable = null,
+            [FromQuery] Prioridad? prioridad = null)
         {
             var archivo = await mediador.EnviarAsync(
-                new GenerarReporteConsulta { IdProyecto = idProyecto, Formato = formato },
+                new GenerarReporteConsulta
+                {
+                    IdProyecto = idProyecto,
+                    Formato = formato,
+                    IdResponsable = idResponsable,
+                    Prioridad = prioridad
+                },
                 cancelacion);
 
             // File fija Content-Type y Content-Disposition, que es lo que necesita

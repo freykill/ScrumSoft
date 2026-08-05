@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using ScrumSoft.Application.Ports;
 using ScrumSoft.Domain.Entities;
+using ScrumSoft.Domain.Enums;
 
 namespace ScrumSoft.Infrastructure.Persistence.Repositories
 {
@@ -30,14 +31,28 @@ namespace ScrumSoft.Infrastructure.Persistence.Repositories
         // Una sola consulta para todo el tablero, no una por columna.
         public async Task<IReadOnlyList<Tarea>> ListarPorProyectoAsync(
             Guid idProyecto,
-            CancellationToken cancelacion = default) =>
-            await contexto.Tareas
+            Guid? idResponsable = null,
+            Prioridad? prioridad = null,
+            CancellationToken cancelacion = default)
+        {
+            var consulta = contexto.Tareas
                 .AsNoTracking()
                 .Where(t => contexto.Columnas
-                    .Any(c => c.Id == t.IdColumna && c.IdProyecto == idProyecto))
+                    .Any(c => c.Id == t.IdColumna && c.IdProyecto == idProyecto));
+
+            // Los filtros viajan al SQL: no se traen todas las tareas para
+            // descartarlas despues en memoria.
+            if (idResponsable is { } responsable)
+                consulta = consulta.Where(t => t.IdResponsable == responsable);
+
+            if (prioridad is { } nivel)
+                consulta = consulta.Where(t => t.Prioridad == nivel);
+
+            return await consulta
                 .OrderBy(t => t.Orden)
                 .ToListAsync(cancelacion)
                 .ConfigureAwait(false);
+        }
 
         // AnyAsync genera un EXISTS: se detiene en la primera coincidencia
         // en vez de contarlas todas.
