@@ -39,15 +39,19 @@
             <label for="contrasena" class="font-medium text-900">Contrasena</label>
             <p-password inputId="contrasena" formControlName="contrasena" [toggleMask]="true" [feedback]="false"
                         styleClass="w-full" inputStyleClass="w-full" autocomplete="new-password"></p-password>
-            <small class="p-error" *ngIf="invalido('contrasena')">Minimo 6 caracteres.</small>
+            <small class="p-error" *ngIf="invalido('contrasena')">Minimo 8 caracteres.</small>
         </div>
 
         <div class="flex flex-column gap-2">
             <label for="rol" class="font-medium text-900">Rol</label>
             <p-dropdown inputId="rol" formControlName="rol" appendTo="body" [options]="opcionesRol"
                         optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
-            <small class="text-600">
-                Administrador puede crear y borrar proyectos y gestionar miembros.
+            <small class="text-600" *ngIf="!esUnoMismo">
+                Administrador es el unico que puede crear y editar usuarios.
+            </small>
+            <small class="text-600" *ngIf="esUnoMismo">
+                No puedes cambiar tu propio rol. Si el ultimo administrador se degradara,
+                nadie podria volver a crear usuarios.
             </small>
         </div>
     </form>

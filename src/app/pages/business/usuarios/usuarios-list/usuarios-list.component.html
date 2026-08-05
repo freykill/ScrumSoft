@@ -23,7 +23,7 @@
             <th>Nombre</th>
             <th>Correo</th>
             <th style="width: 11rem">Rol</th>
-            <th style="width: 7rem" class="text-right">Acciones</th>
+            <th *ngIf="puedeEditar" style="width: 7rem" class="text-right">Acciones</th>
         </tr>
     </ng-template>
 
@@ -35,7 +35,7 @@
                 <p-tag [value]="usuario.rol" [severity]="severidadRol(usuario.rol)"></p-tag>
             </td>
             <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
-            <td class="flex justify-content-end">
+            <td *ngIf="puedeEditar" class="flex justify-content-end">
                 <button pButton pRipple icon="pi pi-pencil" pTooltip="Editar nombre y rol" tooltipPosition="top"
                         class="p-button-text p-button-rounded"
                         (click)="editar.emit(usuario)"></button>
@@ -45,7 +45,7 @@
 
     <ng-template pTemplate="emptymessage">
         <tr>
-            <td colspan="4" class="text-center py-6">
+            <td [attr.colspan]="puedeEditar ? 4 : 3" class="text-center py-6">
                 <i class="pi pi-users text-4xl text-300 block mb-3"></i>
                 <span class="text-600">No hay usuarios para mostrar.</span>
             </td>

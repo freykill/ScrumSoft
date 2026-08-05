@@ -23,6 +23,8 @@ export class UsuariosListComponent {
     /** Indice de la primera fila de la pagina actual. */
     @Input() primeraFila = 0;
     @Input() filasPorPagina = PAGINACION.LIMIT;
+    /** Sin esto la columna de acciones sobra: se oculta entera, no vacia. */
+    @Input() puedeEditar = false;
 
     @Output() paginar = new EventEmitter<PaginaSolicitada>();
     @Output() editar = new EventEmitter<UsuarioDto>();

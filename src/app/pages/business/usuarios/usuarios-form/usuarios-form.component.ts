@@ -22,6 +22,8 @@ export class UsuariosFormComponent {
 
     /** null = alta, con valor = edicion. */
     @Input() usuario: UsuarioDto | null = null;
+    /** Se esta editando la propia cuenta: el backend no deja cambiarse el rol. */
+    @Input() esUnoMismo = false;
     @Input() visible = false;
     @Input() guardando = false;
 
@@ -33,7 +35,9 @@ export class UsuariosFormComponent {
     readonly form = this.fb.nonNullable.group({
         nombre: ['', [Validators.required, Validators.minLength(3)]],
         correoElectronico: ['', [Validators.required, Validators.email]],
-        contrasena: ['', [Validators.required, Validators.minLength(6)]],
+        // Ocho, que es el minimo que valida el backend. Con seis el formulario
+        // daba por bueno algo que despues volvia como 400.
+        contrasena: ['', [Validators.required, Validators.minLength(8)]],
         rol: [RolUsuario.Miembro, Validators.required]
     });
 
@@ -68,7 +72,7 @@ export class UsuariosFormComponent {
             });
         } else {
             correo.setValidators([Validators.required, Validators.email]);
-            contrasena.setValidators([Validators.required, Validators.minLength(6)]);
+            contrasena.setValidators([Validators.required, Validators.minLength(8)]);
 
             this.form.reset({
                 nombre: '',
@@ -76,6 +80,15 @@ export class UsuariosFormComponent {
                 contrasena: '',
                 rol: RolUsuario.Miembro
             });
+        }
+
+        // Despues del reset, que es quien deja los controles habilitados otra
+        // vez. getRawValue() incluye los deshabilitados, asi que el rol viaja
+        // igual y el PUT no lo pierde por estar bloqueado.
+        if (this.esUnoMismo) {
+            this.form.controls.rol.disable();
+        } else {
+            this.form.controls.rol.enable();
         }
     }
 

@@ -4,6 +4,7 @@ import { MessageService } from 'primeng/api';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { DEBOUNCE_BUSQUEDA, PAGINACION, TOAST_LIFE } from 'src/app/config/app.constants';
+import { AuthService } from 'src/app/common/services';
 import { GuardarUsuarioComando, PaginaSolicitada, UsuarioDto, UsuarioFiltros } from 'src/app/models';
 import { UsuarioService } from 'src/app/services';
 
@@ -39,6 +40,15 @@ export class UsuariosComponent implements OnInit {
     mostrarFormulario = false;
     usuarioEnEdicion: UsuarioDto | null = null;
 
+    /**
+     * Crear y editar usuarios son las UNICAS dos acciones que dependen del rol;
+     * todo lo demas en la aplicacion se decide por pertenecer al proyecto.
+     * Esconder los botones no es la seguridad -el backend responde 403 igual-,
+     * es no ofrecer algo que va a fallar.
+     */
+    readonly esAdministrador = this.auth.esAdministrador();
+    private readonly idUsuarioEnSesion = this.auth.idUsuario;
+
     private readonly destroyRef = inject(DestroyRef);
     private readonly textoBuscado = new Subject<string>();
 
@@ -47,8 +57,17 @@ export class UsuariosComponent implements OnInit {
 
     constructor(
         private readonly usuarioService: UsuarioService,
+        private readonly auth: AuthService,
         private readonly mensajes: MessageService
     ) { }
+
+    /**
+     * El backend rechaza que alguien cambie su propio rol: si el ultimo
+     * administrador se degradara, nadie podria volver a crear usuarios.
+     */
+    get editandoseASiMismo(): boolean {
+        return !!this.usuarioEnEdicion && this.usuarioEnEdicion.id === this.idUsuarioEnSesion;
+    }
 
     ngOnInit(): void {
         this.textoBuscado.pipe(
