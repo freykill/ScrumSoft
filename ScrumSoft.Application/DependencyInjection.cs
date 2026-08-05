@@ -45,6 +45,7 @@ namespace ScrumSoft.Application
             servicios.AddScoped<IManejador<RenombrarColumnaComando, ColumnaDto>, RenombrarColumnaHandler>();
             servicios.AddScoped<IManejador<ReordenarColumnasComando, IReadOnlyList<ColumnaDto>>, ReordenarColumnasHandler>();
             servicios.AddScoped<IManejador<EliminarColumnaComando, Unidad>, EliminarColumnaHandler>();
+            servicios.AddScoped<IManejador<ListarColumnasConsulta, IReadOnlyList<ColumnaDto>>, ListarColumnasHandler>();
 
             // Tareas
             servicios.AddScoped<IManejador<CrearTareaComando, TareaDto>, CrearTareaHandler>();

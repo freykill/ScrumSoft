@@ -11,6 +11,19 @@ namespace ScrumSoft.Api.Controllers
     [Authorize]
     public sealed class ColumnasController : ControllerBase
     {
+        /// <summary>Lista las columnas activas del proyecto, en orden.</summary>
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<IReadOnlyList<ColumnaDto>>> Listar(
+            [FromServices] IMediador mediador,
+            Guid idProyecto,
+            CancellationToken cancelacion) =>
+            Ok(await mediador.EnviarAsync(
+                new ListarColumnasConsulta { IdProyecto = idProyecto },
+                cancelacion));
+
         /// <summary>Agrega una columna al final del tablero.</summary>
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
