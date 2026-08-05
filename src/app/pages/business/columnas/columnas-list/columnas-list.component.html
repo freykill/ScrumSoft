@@ -1,13 +1,17 @@
+<!--
+    Sin columna "Tareas": el GET de columnas devuelve ColumnaDto, que no trae
+    el conteo. Por eso la papelera va siempre activa y quien decide si se
+    puede borrar es el backend, con su 400.
+-->
 <p-table [value]="columnas"
          [loading]="cargando"
          styleClass="p-datatable-sm"
-         [tableStyle]="{ 'min-width': '45rem' }">
+         [tableStyle]="{ 'min-width': '34rem' }">
 
     <ng-template pTemplate="header">
         <tr>
             <th style="width: 6rem" class="text-center">Orden</th>
             <th>Nombre</th>
-            <th style="width: 8rem" class="text-center">Tareas</th>
             <th style="width: 14rem" class="text-right">Acciones</th>
         </tr>
     </ng-template>
@@ -16,15 +20,6 @@
         <tr>
             <td class="text-center text-600">{{ columna.orden }}</td>
             <td class="font-medium text-900">{{ columna.nombre }}</td>
-            <!--
-                Numero pelado y no un p-tag: es un conteo, no un estado. Con
-                severidades el 0 se pintaba de color de marca y parecia que
-                "0 tareas" fuera algo bueno o algo que avisar.
-            -->
-            <td class="text-center" [class.text-600]="!tieneTareas(columna)"
-                [class.text-900]="tieneTareas(columna)">
-                {{ columna.cantidadTareas }}
-            </td>
             <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
             <td class="flex justify-content-end">
                 <button pButton pRipple icon="pi pi-arrow-up" pTooltip="Subir" tooltipPosition="top"
@@ -36,10 +31,8 @@
                 <button pButton pRipple icon="pi pi-pencil" pTooltip="Renombrar" tooltipPosition="top"
                         class="p-button-text p-button-rounded mr-1"
                         (click)="renombrar.emit(columna)"></button>
-                <button pButton pRipple icon="pi pi-trash" tooltipPosition="top"
+                <button pButton pRipple icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top"
                         class="p-button-text p-button-rounded p-button-danger"
-                        [pTooltip]="tieneTareas(columna) ? 'Tiene tareas dentro, no se puede eliminar' : 'Eliminar'"
-                        [disabled]="tieneTareas(columna)"
                         (click)="eliminar.emit(columna)"></button>
             </td>
         </tr>
@@ -47,7 +40,7 @@
 
     <ng-template pTemplate="emptymessage">
         <tr>
-            <td colspan="4" class="text-center py-6">
+            <td colspan="3" class="text-center py-6">
                 <i class="pi pi-th-large text-4xl text-300 block mb-3"></i>
                 <span class="text-600">Este proyecto todavia no tiene columnas.</span>
             </td>

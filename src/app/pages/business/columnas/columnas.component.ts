@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TOAST_LIFE } from 'src/app/config/app.constants';
-import { ColumnaDto, ColumnaFilaDto } from 'src/app/models';
-import { ColumnaService, ProyectoService } from 'src/app/services';
+import { ColumnaDto } from 'src/app/models';
+import { ColumnaService } from 'src/app/services';
 import { moverElemento, renumerarOrden } from 'src/app/utilities';
 
 /**
@@ -12,11 +12,6 @@ import { moverElemento, renumerarOrden } from 'src/app/utilities';
  * Cuelga de /business/proyectos/:idProyecto/columnas porque en la API una
  * columna no existe fuera de su proyecto: todos los endpoints son
  * /proyectos/{idProyecto}/columnas/... No hay listado global de columnas.
- *
- * Para leerlas se llama al tablero y no a un GET de columnas, que no existe:
- * la API solo expone escritura sobre /columnas. De paso el tablero trae el
- * nombre del proyecto para la cabecera y las tareas de cada columna, que es
- * como se sabe cual se puede borrar.
  */
 @Component({
     selector: 'app-columnas',
@@ -28,19 +23,18 @@ export class ColumnasComponent implements OnInit {
     idProyecto = '';
     nombreProyecto = '';
 
-    columnas: ColumnaFilaDto[] = [];
+    columnas: ColumnaDto[] = [];
     cargando = false;
     guardando = false;
 
     mostrarFormulario = false;
-    columnaEnEdicion: ColumnaFilaDto | null = null;
+    columnaEnEdicion: ColumnaDto | null = null;
 
     /** Descarta respuestas de reordenaciones que ya quedaron atras. */
     private ordenEnVuelo = 0;
 
     constructor(
         private readonly rutaActiva: ActivatedRoute,
-        private readonly proyectoService: ProyectoService,
         private readonly columnaService: ColumnaService,
         private readonly confirmacion: ConfirmationService,
         private readonly mensajes: MessageService
@@ -50,6 +44,13 @@ export class ColumnasComponent implements OnInit {
         // snapshot y no observable: al cambiar de proyecto se entra por el
         // listado, nunca se reusa el componente con otro id.
         this.idProyecto = this.rutaActiva.snapshot.paramMap.get('idProyecto') ?? '';
+
+        // El nombre lo manda el listado al navegar. La API no tiene un GET de
+        // un proyecto suelto (/proyectos/{id} solo acepta PUT y DELETE), asi
+        // que entrando por enlace directo o tras F5 no hay de donde sacarlo y
+        // la cabecera se queda con el texto generico.
+        this.nombreProyecto = history.state?.nombreProyecto ?? '';
+
         this.cargar();
     }
 
@@ -59,10 +60,7 @@ export class ColumnasComponent implements OnInit {
         this.cargando = true;
 
         try {
-            const tablero = await this.proyectoService.obtenerTablero(this.idProyecto);
-
-            this.nombreProyecto = tablero.nombreProyecto;
-            this.columnas = this.aFilas(tablero.columnas ?? []);
+            this.columnas = this.ordenadas(await this.columnaService.listar(this.idProyecto));
         } catch (error) {
             this.columnas = [];
             this.avisarError('No se pudieron cargar las columnas', error);
@@ -72,20 +70,12 @@ export class ColumnasComponent implements OnInit {
     }
 
     /**
-     * El tablero trae las tareas enteras y aqui solo interesa cuantas hay.
      * Se ordena por `orden` aunque el backend ya lo mande ordenado: la pantalla
      * promete que lo que se ve es el orden real, y eso no puede depender de en
      * que secuencia venga el json.
      */
-    private aFilas(columnas: { id: string; nombre: string; orden: number; tareas?: unknown[] }[]): ColumnaFilaDto[] {
-        return [...columnas]
-            .sort((una, otra) => una.orden - otra.orden)
-            .map(columna => ({
-                id: columna.id,
-                nombre: columna.nombre,
-                orden: columna.orden,
-                cantidadTareas: columna.tareas?.length ?? 0
-            }));
+    private ordenadas(columnas: ColumnaDto[]): ColumnaDto[] {
+        return [...columnas].sort((una, otra) => una.orden - otra.orden);
     }
 
     // ------------------------------------------------------------- reordenar
@@ -121,22 +111,13 @@ export class ColumnasComponent implements OnInit {
             if (peticion !== this.ordenEnVuelo) { return; }
 
             // Manda el orden que quedo grabado, no el que se calculo aqui.
-            this.columnas = this.conCantidadDeTareas(confirmadas);
+            this.columnas = this.ordenadas(confirmadas);
         } catch (error) {
             if (peticion !== this.ordenEnVuelo) { return; }
 
             this.avisarError('No se pudo guardar el orden', error);
             await this.cargar();
         }
-    }
-
-    /** El backend devuelve ColumnaDto, sin tareas: se conserva el conteo que ya habia. */
-    private conCantidadDeTareas(columnas: ColumnaDto[]): ColumnaFilaDto[] {
-        const conteos = new Map(this.columnas.map(columna => [columna.id, columna.cantidadTareas]));
-
-        return [...columnas]
-            .sort((una, otra) => una.orden - otra.orden)
-            .map(columna => ({ ...columna, cantidadTareas: conteos.get(columna.id) ?? 0 }));
     }
 
     // ------------------------------------------------------------ formulario
@@ -146,7 +127,7 @@ export class ColumnasComponent implements OnInit {
         this.mostrarFormulario = true;
     }
 
-    renombrar(columna: ColumnaFilaDto): void {
+    renombrar(columna: ColumnaDto): void {
         this.columnaEnEdicion = columna;
         this.mostrarFormulario = true;
     }
@@ -162,8 +143,7 @@ export class ColumnasComponent implements OnInit {
                     nombre
                 });
 
-                // Renombrar no mueve nada, asi que no hace falta recargar el
-                // tablero entero (que se traeria todas las tareas) por un nombre.
+                // Renombrar no mueve nada: se parchea la fila y no se recarga.
                 this.columnas = this.columnas.map(columna =>
                     columna.id === actualizada.id ? { ...columna, nombre: actualizada.nombre } : columna
                 );
@@ -171,8 +151,8 @@ export class ColumnasComponent implements OnInit {
             } else {
                 const creada = await this.columnaService.agregar({ idProyecto: this.idProyecto, nombre });
 
-                // Entra al final y recien creada no puede tener tareas.
-                this.columnas = [...this.columnas, { ...creada, cantidadTareas: 0 }];
+                // Entra al final del tablero, con el orden que le puso el backend.
+                this.columnas = [...this.columnas, creada];
                 this.avisar('Columna creada', nombre);
             }
 
@@ -188,21 +168,11 @@ export class ColumnasComponent implements OnInit {
 
     // -------------------------------------------------------------- eliminar
 
-    confirmarEliminacion(columna: ColumnaFilaDto): void {
-        // La regla la aplica el backend (responde 400); esto solo evita el viaje.
-        if (columna.cantidadTareas > 0) {
-            this.mensajes.add({
-                severity: 'warn',
-                summary: 'No se puede eliminar',
-                detail: `${columna.nombre} tiene ${columna.cantidadTareas} tarea(s). Muevelas antes.`,
-                life: TOAST_LIFE
-            });
-            return;
-        }
-
+    confirmarEliminacion(columna: ColumnaDto): void {
         this.confirmacion.confirm({
             header: 'Eliminar columna',
-            message: `Se eliminara la columna <b>${columna.nombre}</b> del tablero.`,
+            message: `Se eliminara la columna <b>${columna.nombre}</b> del tablero.`
+                + ' Si tiene tareas dentro, el servidor no dejara.',
             icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Eliminar',
             rejectLabel: 'Cancelar',
@@ -212,13 +182,16 @@ export class ColumnasComponent implements OnInit {
         });
     }
 
-    private async eliminar(columna: ColumnaFilaDto): Promise<void> {
+    /**
+     * No se adelanta ninguna comprobacion: el GET de columnas no dice cuantas
+     * tareas tiene cada una, asi que la regla la contesta el backend con un
+     * 400 y su mensaje, que es de donde sale el aviso.
+     */
+    private async eliminar(columna: ColumnaDto): Promise<void> {
         try {
             await this.columnaService.eliminar(this.idProyecto, columna.id);
             this.avisar('Columna eliminada', columna.nombre);
         } catch (error) {
-            // Puede llegar un 400 si alguien le metio una tarea mientras tanto:
-            // el conteo que tenemos seria viejo.
             this.avisarError('No se pudo eliminar la columna', error);
         }
 
@@ -234,7 +207,7 @@ export class ColumnasComponent implements OnInit {
         this.mensajes.add({
             severity: 'info',
             summary: 'Tablero pendiente',
-            detail: `El tablero de ${this.nombreProyecto} todavia no esta construido.`,
+            detail: 'El tablero de este proyecto todavia no esta construido.',
             life: TOAST_LIFE
         });
     }

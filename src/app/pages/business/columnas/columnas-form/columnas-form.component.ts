@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { ColumnaFilaDto } from 'src/app/models';
+import { ColumnaDto } from 'src/app/models';
 
 /**
  * Presentacional. Alta y renombrado de una columna.
@@ -16,7 +16,7 @@ import { ColumnaFilaDto } from 'src/app/models';
 export class ColumnasFormComponent {
 
     /** null = alta, con valor = renombrado. */
-    @Input() columna: ColumnaFilaDto | null = null;
+    @Input() columna: ColumnaDto | null = null;
     @Input() visible = false;
     @Input() guardando = false;
 

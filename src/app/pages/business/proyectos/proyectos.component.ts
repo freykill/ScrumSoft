@@ -213,7 +213,13 @@ export class ProyectosComponent implements OnInit {
 
     /** Las columnas viven dentro del proyecto, no en el menu lateral. */
     verColumnas(proyecto: ProyectoDto): void {
-        this.router.navigate(['/business/proyectos', proyecto.id, 'columnas']);
+        // El nombre viaja en el state solo para la cabecera de esa pantalla:
+        // la API no tiene GET /proyectos/{id}, asi que desde alli no hay como
+        // pedirlo. Si se entra por enlace directo se pierde, y por eso alla se
+        // resuelve con un texto generico en vez de dejar el titulo a medias.
+        this.router.navigate(['/business/proyectos', proyecto.id, 'columnas'], {
+            state: { nombreProyecto: proyecto.nombre }
+        });
     }
 
     verTablero(proyecto: ProyectoDto): void {
