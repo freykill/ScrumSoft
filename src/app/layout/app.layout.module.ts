@@ -8,6 +8,7 @@ import { SidebarModule } from 'primeng/sidebar';
 import { BadgeModule } from 'primeng/badge';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { InputSwitchModule } from 'primeng/inputswitch';
+import { MenuModule } from 'primeng/menu';
 import { RippleModule } from 'primeng/ripple';
 import { AppMenuComponent } from './app.menu.component';
 import { AppMenuitemComponent } from './app.menuitem.component';
@@ -37,6 +38,7 @@ import { AppLayoutComponent } from "./app.layout.component";
         BadgeModule,
         RadioButtonModule,
         InputSwitchModule,
+        MenuModule,
         RippleModule,
         RouterModule,
         AppConfigModule
