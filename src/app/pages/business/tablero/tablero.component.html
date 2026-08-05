@@ -11,6 +11,22 @@
                       tooltipPosition="right">
                     <i class="pi pi-circle-fill" style="font-size: .5rem"></i> En vivo
                 </span>
+
+                <!--
+                    Quien mas esta mirando ahora mismo. Uno mismo no sale: lo
+                    que interesa es saber que hay alguien mas, no verte a ti.
+                -->
+                <div *ngIf="otrosViendo.length" class="flex align-items-center gap-1 ml-1"
+                     [pTooltip]="nombresDeOtros" tooltipPosition="right">
+                    <span *ngFor="let usuario of otrosViendo | slice:0:3"
+                          class="flex align-items-center justify-content-center border-circle surface-300 text-700 font-medium"
+                          style="width: 1.6rem; height: 1.6rem; font-size: .7rem">
+                        {{ inicialesDe(usuario.nombre) }}
+                    </span>
+                    <span *ngIf="otrosViendo.length > 3" class="text-600 text-xs">
+                        +{{ otrosViendo.length - 3 }}
+                    </span>
+                </div>
             </div>
             <p class="text-600 mt-2 mb-0">Arrastra las tarjetas para moverlas de columna o cambiarlas de orden.</p>
         </div>

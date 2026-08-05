@@ -2,6 +2,7 @@ import { CdkDragDrop } from '@angular/cdk/drag-drop';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
 import { Prioridad } from 'src/app/enums';
 import { ColumnaConTareasDto, SoltarTarea, TareaDto } from 'src/app/models';
+import { iniciales } from 'src/app/utilities';
 
 /**
  * Presentacional. Una columna del tablero con sus tarjetas.
@@ -49,15 +50,7 @@ export class TableroColumnaComponent {
 
     /** Las tarjetas miden 18rem: cabe un circulito con iniciales, no un nombre. */
     inicialesResponsable(idResponsable: string): string {
-        const nombre = this.nombresDeMiembros.get(idResponsable);
-        if (!nombre) { return '?'; }
-
-        return nombre
-            .split(' ')
-            .filter(parte => parte)
-            .slice(0, 2)
-            .map(parte => parte[0].toUpperCase())
-            .join('');
+        return iniciales(this.nombresDeMiembros.get(idResponsable));
     }
 
     severidadPrioridad(prioridad: Prioridad): string {

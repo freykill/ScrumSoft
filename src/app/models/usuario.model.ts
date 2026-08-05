@@ -11,6 +11,17 @@ export interface UsuarioDto {
 
 export type UsuarioDtoPagedResult = ResultadoPaginado<UsuarioDto>;
 
+/**
+ * Evento `UsuariosConectados` del hub: quien esta viendo un tablero ahora.
+ *
+ * Llega solo cuando la lista cambia, y una misma persona con varias pestañas
+ * abiertas aparece una sola vez.
+ */
+export interface UsuarioConectado {
+    idUsuario: string;
+    nombre: string;
+}
+
 /** Query params del GET /api/v1/usuarios */
 export interface UsuarioFiltros {
     /** Un solo campo de texto; el backend decide si busca por nombre o correo. */

@@ -3,7 +3,7 @@ import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signal
 import { Subject } from 'rxjs';
 import { AuthService, UrlServices } from '../common/services';
 import { aPrioridad } from '../enums';
-import { ColumnaDto, TareaDto } from '../models';
+import { ColumnaDto, TareaDto, UsuarioConectado } from '../models';
 
 /**
  * Canal de tiempo real del tablero (/hubs/tablero).
@@ -28,6 +28,9 @@ export class TableroRealtimeService {
     readonly tareaCambiada = new Subject<TareaDto>();
     readonly tareaEliminada = new Subject<string>();
     readonly columnasCambiadas = new Subject<ColumnaDto[]>();
+
+    /** Quien esta mirando este tablero. Solo llega cuando la lista cambia. */
+    readonly usuariosConectados = new Subject<UsuarioConectado[]>();
 
     /**
      * Se volvio a conectar tras una caida. Hay un hueco: no existe historial
@@ -101,6 +104,8 @@ export class TableroRealtimeService {
         conexion.on('TareaEliminada', (id: string) => this.emitir(this.tareaEliminada, id));
         conexion.on('ColumnasActualizadas', (columnas: ColumnaDto[]) =>
             this.emitir(this.columnasCambiadas, columnas ?? []));
+        conexion.on('UsuariosConectados', (usuarios: UsuarioConectado[]) =>
+            this.emitir(this.usuariosConectados, usuarios ?? []));
 
         conexion.onreconnecting(() => this.emitir(this.estadoCambiado, false));
 

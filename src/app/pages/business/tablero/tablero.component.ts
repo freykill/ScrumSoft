@@ -14,7 +14,8 @@ import {
     ProyectoDto,
     SoltarTarea,
     TableroFiltros,
-    TareaDto
+    TareaDto,
+    UsuarioConectado
 } from 'src/app/models';
 import {
     MiembroService,
@@ -23,7 +24,8 @@ import {
     TableroRealtimeService,
     TareaService
 } from 'src/app/services';
-import { aNombreDeArchivo, calcularVecinos, descargarBlob } from 'src/app/utilities';
+import { AuthService } from 'src/app/common/services';
+import { aNombreDeArchivo, calcularVecinos, descargarBlob, iniciales } from 'src/app/utilities';
 
 /**
  * Cuantos proyectos entran en el selector. El desplegable filtra en cliente,
@@ -92,6 +94,12 @@ export class TableroComponent implements OnInit, OnDestroy {
     /** Hay conexion con el hub, o sea que se ven los cambios de los demas. */
     enVivo = false;
 
+    /**
+     * Quien MAS esta viendo este tablero. Uno mismo se excluye: la gracia es
+     * saber que no estas solo, y verte a ti en la lista no aporta nada.
+     */
+    otrosViendo: UsuarioConectado[] = [];
+
     /** Resumen de la cabecera. Se calcula al cargar, no en getters de plantilla. */
     totalTareas = 0;
     tareasPrioritarias = 0;
@@ -117,6 +125,7 @@ export class TableroComponent implements OnInit, OnDestroy {
         private readonly miembroService: MiembroService,
         private readonly reporteService: ReporteService,
         private readonly enVivoService: TableroRealtimeService,
+        private readonly auth: AuthService,
         private readonly confirmacion: ConfirmationService,
         private readonly mensajes: MessageService
     ) { }
@@ -184,9 +193,32 @@ export class TableroComponent implements OnInit, OnDestroy {
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(() => this.cargarTablero());
 
+        this.enVivoService.usuariosConectados
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(usuarios => {
+                const yo = this.auth.idUsuario;
+                this.otrosViendo = usuarios.filter(usuario => usuario.idUsuario !== yo);
+            });
+
         this.enVivoService.estadoCambiado
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(vivo => this.enVivo = vivo);
+            .subscribe(vivo => {
+                this.enVivo = vivo;
+
+                // Sin conexion no se sabe quien sigue ahi; mejor no mostrar a
+                // gente que a lo mejor se fue hace rato.
+                if (!vivo) { this.otrosViendo = []; }
+            });
+    }
+
+    /** Para los circulitos de la cabecera. */
+    inicialesDe(nombre: string): string {
+        return iniciales(nombre);
+    }
+
+    /** Devuelve un string, no un array: no crea referencias nuevas por ciclo. */
+    get nombresDeOtros(): string {
+        return this.otrosViendo.map(usuario => usuario.nombre).join(', ');
     }
 
     /**
@@ -273,6 +305,10 @@ export class TableroComponent implements OnInit, OnDestroy {
         }
 
         this.idProyecto = idProyecto;
+
+        // Al saltar de tablero, los de antes ya no aplican. El hub mandara la
+        // lista del nuevo al suscribirse.
+        this.otrosViendo = [];
 
         // En paralelo: son independientes y asi se espera una ida y vuelta en
         // vez de dos. Los miembros hacen falta para el selector de responsable.
