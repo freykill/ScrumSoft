@@ -1,13 +1,21 @@
 <div
     class="surface-card border-round-xl border-1 surface-border p-4 mb-3 flex flex-column md:flex-row md:align-items-center justify-content-between gap-3">
-    <div class="flex-1">
-        <a routerLink="/business/proyectos"
-           class="text-600 hover:text-primary no-underline text-sm inline-flex align-items-center gap-1 mb-2">
-            <i class="pi pi-arrow-left text-xs"></i> Proyectos
-        </a>
-        <!-- El nombre llega con el tablero; mientras carga no se deja el titulo cojo -->
-        <h2 class="text-900 text-2xl font-bold m-0">Columnas de {{ nombreProyecto || 'este proyecto' }}</h2>
-        <p class="text-600 mt-2 mb-0">Las etapas del tablero. El orden de aqui es el orden en que se ven.</p>
+    <!--
+        La vuelta atras es un boton del tema y no un enlace suelto encima del
+        titulo: al lado del texto se lee como un control de la cabecera, y con
+        p-button-plain queda en gris y no compite con la accion principal.
+    -->
+    <div class="flex-1 flex align-items-center gap-3">
+        <button pButton pRipple type="button" icon="pi pi-arrow-left"
+                class="p-button-text p-button-rounded p-button-plain flex-shrink-0"
+                pTooltip="Volver a proyectos" tooltipPosition="bottom"
+                routerLink="/business/proyectos"></button>
+
+        <div>
+            <!-- El nombre viaja en el state de la navegacion; con F5 se pierde -->
+            <h2 class="text-900 text-2xl font-bold m-0">Columnas de {{ nombreProyecto || 'este proyecto' }}</h2>
+            <p class="text-600 mt-2 mb-0">Las etapas del tablero. El orden de aqui es el orden en que se ven.</p>
+        </div>
     </div>
 
     <div class="flex-shrink-0 flex gap-2">

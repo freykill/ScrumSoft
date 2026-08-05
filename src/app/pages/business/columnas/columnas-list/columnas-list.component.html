@@ -18,7 +18,14 @@
 
     <ng-template pTemplate="body" let-columna let-i="rowIndex">
         <tr>
-            <td class="text-center text-600">{{ columna.orden }}</td>
+            <!--
+                La posicion en la lista, no `columna.orden`. El backend ordena
+                con huecos (1000, 2000, 3000...) para poder intercalar sin
+                tocar las demas filas; ese numero es suyo y al usuario no le
+                dice nada. Ademas asi la posicion es correcta en el acto al
+                mover, sin esperar a que el servidor conteste.
+            -->
+            <td class="text-center text-600">{{ i + 1 }}</td>
             <td class="font-medium text-900">{{ columna.nombre }}</td>
             <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
             <td class="flex justify-content-end">
