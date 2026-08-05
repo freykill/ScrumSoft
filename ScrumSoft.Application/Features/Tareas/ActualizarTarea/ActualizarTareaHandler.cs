@@ -1,6 +1,7 @@
 using ScrumSoft.Application.Common;
 using ScrumSoft.Application.Mediador;
 using ScrumSoft.Application.Ports;
+using ScrumSoft.Domain.Common;
 
 namespace ScrumSoft.Application.Tareas
 {
@@ -23,10 +24,21 @@ namespace ScrumSoft.Application.Tareas
             if (proyecto.Columnas.All(c => c.Id != tarea.IdColumna))
                 throw new AccesoDenegadoException("La tarea no pertenece a este proyecto.");
 
+            // Solo se valida cuando el responsable cambia. Si a alguien lo sacaron del
+            // equipo, sus tareas conservan su nombre como dato historico; validar
+            // siempre dejaria esas tareas bloqueadas, sin poder ni corregirles el
+            // titulo hasta reasignarlas.
+            if (peticion.IdResponsable is { } responsable &&
+                responsable != tarea.IdResponsable &&
+                !proyecto.EsMiembro(responsable))
+            {
+                throw new DomainException("El responsable no pertenece al equipo del proyecto.");
+            }
+
             tarea.Actualizar(peticion.Titulo, peticion.Descripcion, peticion.Prioridad);
 
-            if (peticion.IdResponsable is { } responsable)
-                tarea.Asignar(responsable);
+            if (peticion.IdResponsable is { } nuevoResponsable)
+                tarea.Asignar(nuevoResponsable);
             else
                 tarea.Desasignar();
 

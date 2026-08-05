@@ -21,6 +21,12 @@ namespace ScrumSoft.Application.Tareas
             if (proyecto.Columnas.All(c => c.Id != peticion.IdColumna))
                 throw new RecursoNoEncontradoException("Columna", peticion.IdColumna);
 
+            // Sin esto un id inexistente reventaria contra la clave foranea con un 500,
+            // y uno valido pero ajeno al equipo se aceptaria en silencio. Los miembros
+            // ya vienen cargados con el proyecto: no cuesta una consulta extra.
+            if (peticion.IdResponsable is { } responsable && !proyecto.EsMiembro(responsable))
+                throw new DomainException("El responsable no pertenece al equipo del proyecto.");
+
             var existentes = await tareas
                 .ListarPorColumnaAsync(peticion.IdColumna, cancelacion)
                 .ConfigureAwait(false);
