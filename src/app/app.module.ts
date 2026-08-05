@@ -2,6 +2,8 @@ import { NgModule } from '@angular/core';
 import { HashLocationStrategy, LocationStrategy } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { MessageService } from 'primeng/api';
+import { ButtonModule } from 'primeng/button';
+import { RippleModule } from 'primeng/ripple';
 import { ToastModule } from 'primeng/toast';
 import { httpInterceptorProviders } from './common/interceptors';
 import { AppComponent } from './app.component';
@@ -16,7 +18,9 @@ import { NotfoundComponent } from './pages/notfound/notfound.component';
     imports: [
         AppRoutingModule,
         AppLayoutModule,
+        ButtonModule,
         HttpClientModule,
+        RippleModule,
         ToastModule
     ],
     providers: [
