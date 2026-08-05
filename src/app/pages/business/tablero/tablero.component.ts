@@ -1,17 +1,37 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { TOAST_LIFE } from 'src/app/config/app.constants';
-import { ColumnaConTareasDto, GuardarTareaComando, SoltarTarea, TareaDto } from 'src/app/models';
+import { Prioridad } from 'src/app/enums';
+import {
+    ColumnaConTareasDto,
+    GuardarTareaComando,
+    ProyectoDto,
+    SoltarTarea,
+    TareaDto
+} from 'src/app/models';
 import { ProyectoService, TareaService } from 'src/app/services';
 import { calcularVecinos } from 'src/app/utilities';
 
 /**
- * Contenedor del tablero de UN proyecto.
+ * Cuantos proyectos entran en el selector. El desplegable filtra en cliente,
+ * asi que pasado este tope habria que buscar contra el servidor.
+ */
+const TOPE_DEL_SELECTOR = 100;
+
+/**
+ * Tablero de UN proyecto, con selector para saltar entre ellos.
  *
  * Es la unica pantalla que lee tareas: la API no tiene un GET de tareas, solo
  * el tablero las devuelve, ya repartidas por columna. Por eso las tareas se
  * crean y se editan desde aqui y no desde un listado aparte.
+ *
+ * Vive en /proyectos/:idProyecto/tablero y no en una ruta suelta aunque se
+ * entre por el menu: el proyecto tiene que estar en la url para que el enlace
+ * directo y el F5 abran el mismo tablero, y para que mas adelante la conexion
+ * de tiempo real sepa a que tablero suscribirse. /business/tablero existe solo
+ * como atajo y redirige al primer proyecto.
  */
 @Component({
     selector: 'app-tablero',
@@ -21,16 +41,25 @@ import { calcularVecinos } from 'src/app/utilities';
 export class TableroComponent implements OnInit {
 
     idProyecto = '';
-    nombreProyecto = '';
+
+    /** Para el selector de la cabecera. */
+    proyectos: ProyectoDto[] = [];
 
     columnas: ColumnaConTareasDto[] = [];
     cargando = false;
     guardando = false;
 
+    /** Resumen de la cabecera. Se calcula al cargar, no en getters de plantilla. */
+    totalTareas = 0;
+    tareasPrioritarias = 0;
+
     mostrarFormulario = false;
     tareaEnEdicion: TareaDto | null = null;
     /** En que columna se crea la tarea nueva. Solo se usa en el alta. */
     columnaDestino: ColumnaConTareasDto | null = null;
+
+    private readonly destroyRef = inject(DestroyRef);
+    private listaPedida = false;
 
     constructor(
         private readonly rutaActiva: ActivatedRoute,
@@ -42,19 +71,58 @@ export class TableroComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.idProyecto = this.rutaActiva.snapshot.paramMap.get('idProyecto') ?? '';
-        this.cargar();
+        // paramMap y no snapshot: al cambiar de proyecto en el selector se
+        // navega a la misma ruta con otro id, y Angular reusa el componente
+        // sin volver a llamar a ngOnInit. Con snapshot el tablero se quedaria
+        // pintando el proyecto anterior.
+        this.rutaActiva.paramMap
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe(parametros => this.alNavegar(parametros.get('idProyecto') ?? ''));
     }
 
     // ------------------------------------------------------------------ carga
 
-    private async cargar(): Promise<void> {
+    private async alNavegar(idProyecto: string): Promise<void> {
+        await this.cargarProyectos();
+
+        if (!idProyecto) {
+            this.abrirPrimerProyecto();
+            return;
+        }
+
+        this.idProyecto = idProyecto;
+        await this.cargarTablero();
+    }
+
+    /** El selector se pide una sola vez, no en cada salto de proyecto. */
+    private async cargarProyectos(): Promise<void> {
+        if (this.listaPedida) { return; }
+        this.listaPedida = true;
+
+        try {
+            const pagina = await this.proyectoService.listar({ pagina: 1, tamanoPagina: TOPE_DEL_SELECTOR });
+            this.proyectos = pagina.elementos ?? [];
+        } catch (error) {
+            this.avisarError('No se pudo cargar la lista de proyectos', error);
+        }
+    }
+
+    /** Se entro por /business/tablero, sin proyecto: se abre el primero que haya. */
+    private abrirPrimerProyecto(): void {
+        const primero = this.proyectos[0];
+        if (!primero) { return; }
+
+        // replaceUrl para que el boton de atras del navegador no rebote entre
+        // el atajo y el tablero al que acaba de mandar.
+        this.router.navigate(['/business/proyectos', primero.id, 'tablero'], { replaceUrl: true });
+    }
+
+    private async cargarTablero(): Promise<void> {
         this.cargando = true;
 
         try {
             const tablero = await this.proyectoService.obtenerTablero(this.idProyecto);
 
-            this.nombreProyecto = tablero.nombreProyecto;
             this.columnas = (tablero.columnas ?? [])
                 .map(columna => ({ ...columna, tareas: [...(columna.tareas ?? [])] }))
                 .sort((una, otra) => una.orden - otra.orden);
@@ -63,7 +131,17 @@ export class TableroComponent implements OnInit {
             this.avisarError('No se pudo cargar el tablero', error);
         } finally {
             this.cargando = false;
+            this.recalcularResumen();
         }
+    }
+
+    private recalcularResumen(): void {
+        const tareas = this.columnas.flatMap(columna => columna.tareas);
+
+        this.totalTareas = tareas.length;
+        this.tareasPrioritarias = tareas.filter(
+            tarea => tarea.prioridad === Prioridad.Alta || tarea.prioridad === Prioridad.Critica
+        ).length;
     }
 
     /**
@@ -72,6 +150,18 @@ export class TableroComponent implements OnInit {
      */
     porId(_indice: number, columna: ColumnaConTareasDto): string {
         return columna.id;
+    }
+
+    // ------------------------------------------------------------- proyectos
+
+    cambiarProyecto(idProyecto: string): void {
+        if (idProyecto === this.idProyecto) { return; }
+
+        this.router.navigate(['/business/proyectos', idProyecto, 'tablero']);
+    }
+
+    get nombreProyecto(): string {
+        return this.proyectos.find(proyecto => proyecto.id === this.idProyecto)?.nombre ?? '';
     }
 
     // ------------------------------------------------------------------ mover
@@ -181,6 +271,7 @@ export class TableroComponent implements OnInit {
 
             // Solo se cierra si el backend acepto: si falla, lo escrito sigue ahi.
             this.mostrarFormulario = false;
+            this.recalcularResumen();
         } catch (error) {
             this.avisarError('No se pudo guardar la tarea', error);
         } finally {
@@ -229,12 +320,14 @@ export class TableroComponent implements OnInit {
             ...columna,
             tareas: columna.tareas.filter(actual => actual.id !== tarea.id)
         }));
+        this.recalcularResumen();
 
         try {
             await this.tareaService.eliminar(this.idProyecto, tarea.id);
             this.avisar('Tarea eliminada', tarea.titulo);
         } catch (error) {
             this.columnas = previas;
+            this.recalcularResumen();
             this.avisarError('No se pudo eliminar la tarea', error);
         }
     }

@@ -13,6 +13,9 @@ const routes: Routes = [
     { path: 'proyectos', component: ProyectosComponent },
     { path: 'proyectos/:idProyecto/columnas', component: ColumnasComponent },
     { path: 'proyectos/:idProyecto/tablero', component: TableroComponent },
+    // Atajo del menu: el tablero necesita un proyecto, asi que este entra sin
+    // id y redirige al primero. La url buena sigue siendo la de arriba.
+    { path: 'tablero', component: TableroComponent },
     { path: 'usuarios', component: UsuariosComponent },
     { path: '', redirectTo: 'proyectos', pathMatch: 'full' }
 ];

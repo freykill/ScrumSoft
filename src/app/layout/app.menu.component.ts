@@ -22,8 +22,11 @@ export class AppMenuComponent implements OnInit {
             {
                 label: 'Gestion',
                 items: [
-                    // Columnas y tablero no van aqui: cuelgan de un proyecto
-                    // (/business/proyectos/:id/...) y se entra desde su fila.
+                    // El tablero necesita un proyecto, asi que /business/tablero
+                    // es un atajo que abre el primero; dentro se cambia con el
+                    // selector. Columnas no va aqui: se entra desde el tablero
+                    // o desde la fila del proyecto.
+                    { label: 'Tablero', icon: 'pi pi-fw pi-table', routerLink: ['/business/tablero'] },
                     { label: 'Proyectos', icon: 'pi pi-fw pi-briefcase', routerLink: ['/business/proyectos'] },
                     { label: 'Usuarios', icon: 'pi pi-fw pi-users', routerLink: ['/business/usuarios'] }
                 ]

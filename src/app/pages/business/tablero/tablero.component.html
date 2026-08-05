@@ -1,22 +1,43 @@
-<div
-    class="surface-card border-round-xl border-1 surface-border p-4 mb-3 flex flex-column md:flex-row md:align-items-center justify-content-between gap-3">
+<div class="surface-card border-round-xl border-1 surface-border p-4 mb-3">
 
-    <div class="flex-1 flex align-items-center gap-3">
-        <button pButton pRipple type="button" icon="pi pi-arrow-left"
-                class="p-button-text p-button-rounded p-button-plain flex-shrink-0"
-                pTooltip="Volver a proyectos" tooltipPosition="bottom"
-                routerLink="/business/proyectos"></button>
-
-        <div>
-            <!-- El nombre viaja en el state de la navegacion y ademas llega en el tablero -->
-            <h2 class="text-900 text-2xl font-bold m-0">{{ nombreProyecto || 'Tablero' }}</h2>
+    <div class="flex flex-column lg:flex-row lg:align-items-center justify-content-between gap-3">
+        <div class="flex-1">
+            <h2 class="text-900 text-2xl font-bold m-0">Tablero</h2>
             <p class="text-600 mt-2 mb-0">Arrastra las tarjetas para moverlas de columna o cambiarlas de orden.</p>
+        </div>
+
+        <div class="flex flex-column sm:flex-row gap-2 flex-shrink-0">
+            <!--
+                El selector navega, no filtra en local: el proyecto va en la url
+                para que el enlace directo y el F5 abran el mismo tablero.
+                Con filter porque pasados unos cuantos proyectos hay que buscar.
+            -->
+            <p-dropdown [options]="proyectos" optionLabel="nombre" optionValue="id"
+                        [ngModel]="idProyecto" (onChange)="cambiarProyecto($event.value)"
+                        [filter]="true" filterBy="nombre" filterPlaceholder="Buscar proyecto"
+                        placeholder="Elige un proyecto" [autoDisplayFirst]="false"
+                        styleClass="w-full sm:w-18rem"></p-dropdown>
+
+            <button pButton pRipple icon="pi pi-th-large" label="Columnas" class="p-button-outlined"
+                [disabled]="!idProyecto" (click)="verColumnas()"></button>
         </div>
     </div>
 
-    <div class="flex-shrink-0">
-        <button pButton pRipple icon="pi pi-th-large" label="Columnas" class="p-button-outlined"
-            (click)="verColumnas()"></button>
+    <!-- Resumen del tablero que se esta viendo, calculado de lo ya cargado -->
+    <div *ngIf="idProyecto && !cargando"
+         class="flex flex-wrap gap-4 mt-3 pt-3 border-top-1 surface-border">
+        <div class="flex align-items-baseline gap-2">
+            <span class="text-900 text-xl font-bold">{{ totalTareas }}</span>
+            <span class="text-600 text-sm">tareas</span>
+        </div>
+        <div class="flex align-items-baseline gap-2">
+            <span class="text-900 text-xl font-bold">{{ columnas.length }}</span>
+            <span class="text-600 text-sm">columnas</span>
+        </div>
+        <div class="flex align-items-baseline gap-2">
+            <span class="text-900 text-xl font-bold">{{ tareasPrioritarias }}</span>
+            <span class="text-600 text-sm">de prioridad alta o critica</span>
+        </div>
     </div>
 </div>
 
@@ -39,12 +60,24 @@
         (soltarTarea)="soltar($event)"></app-tablero-columna>
 </div>
 
+<!-- Sin proyecto seleccionado, o el proyecto elegido no tiene columnas -->
 <div *ngIf="!cargando && !columnas.length"
      class="surface-card border-1 surface-border border-round-xl text-center py-8">
     <i class="pi pi-th-large text-4xl text-300 block mb-3"></i>
-    <p class="text-600 mb-3">Este tablero todavia no tiene columnas.</p>
-    <button pButton pRipple icon="pi pi-th-large" label="Configurar columnas" class="p-button-outlined"
-        (click)="verColumnas()"></button>
+
+    <ng-container *ngIf="idProyecto; else sinProyecto">
+        <p class="text-600 mb-3">Este tablero todavia no tiene columnas.</p>
+        <button pButton pRipple icon="pi pi-th-large" label="Configurar columnas" class="p-button-outlined"
+            (click)="verColumnas()"></button>
+    </ng-container>
+
+    <ng-template #sinProyecto>
+        <p class="text-600 mb-3">
+            {{ proyectos.length ? 'Elige un proyecto para ver su tablero.' : 'Todavia no hay ningun proyecto.' }}
+        </p>
+        <button *ngIf="!proyectos.length" pButton pRipple icon="pi pi-briefcase" label="Ir a proyectos"
+            class="p-button-outlined" routerLink="/business/proyectos"></button>
+    </ng-template>
 </div>
 
 <app-tablero-form [(visible)]="mostrarFormulario" [tarea]="tareaEnEdicion"
