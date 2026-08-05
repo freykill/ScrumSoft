@@ -11,3 +11,18 @@ export interface PaginaSolicitada {
     pagina: number;
     tamanoPagina: number;
 }
+
+/**
+ * Envoltorio de los listados paginados del backend. Es el mismo para todos
+ * (proyectos, usuarios), por eso va generico y no repetido en cada modelo.
+ */
+export interface ResultadoPaginado<T> {
+    elementos: T[];
+    pagina: number;
+    tamanoPagina: number;
+    totalElementos: number;
+    /** readOnly en el backend */
+    totalPaginas: number;
+    /** readOnly en el backend */
+    haySiguiente: boolean;
+}

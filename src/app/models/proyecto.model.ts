@@ -1,4 +1,5 @@
 import { EstadoProyecto } from '../enums';
+import { ResultadoPaginado } from './paginacion.model';
 
 /** GET /api/v1/proyectos */
 export interface ProyectoDto {
@@ -13,16 +14,7 @@ export interface ProyectoDto {
 }
 
 /** Envoltorio paginado que devuelve el GET de proyectos. */
-export interface ProyectoDtoPagedResult {
-    elementos: ProyectoDto[];
-    pagina: number;
-    tamanoPagina: number;
-    totalElementos: number;
-    /** readOnly en el backend */
-    totalPaginas: number;
-    /** readOnly en el backend */
-    haySiguiente: boolean;
-}
+export type ProyectoDtoPagedResult = ResultadoPaginado<ProyectoDto>;
 
 /** Query params del GET /api/v1/proyectos */
 export interface ProyectoFiltros {
