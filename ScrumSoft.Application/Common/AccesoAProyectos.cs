@@ -16,7 +16,13 @@ namespace ScrumSoft.Application.Common
             var proyecto = await proyectos.ObtenerPorIdAsync(idProyecto, cancelacion)
                 ?? throw new RecursoNoEncontradoException("Proyecto", idProyecto);
 
-            if (!usuarioActual.EsAdministrador && !proyecto.EsMiembro(usuarioActual.Id))
+            // Una sola regla para todos, sin importar el rol: se toca el proyecto
+            // si se esta en su equipo. Un administrador que necesite entrar a uno
+            // ajeno se agrega como miembro, y esa alta queda con fecha en
+            // proyecto_usuarios. Antes se saltaba esta comprobacion, con lo que
+            // podia leer y borrar cualquier proyecto sin dejar rastro y sin que
+            // ese proyecto le apareciera nunca en su propia lista.
+            if (!proyecto.EsMiembro(usuarioActual.Id))
                 throw new AccesoDenegadoException("No pertenece a este proyecto.");
 
             return proyecto;
