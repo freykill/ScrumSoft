@@ -100,7 +100,12 @@ builder.Services.AddCors(opciones =>
         .AllowAnyHeader()
         .AllowAnyMethod()
         // Requerido por SignalR para negociar la conexion.
-        .AllowCredentials()));
+        .AllowCredentials()
+        // Sin esto el navegador recibe la cabecera pero no deja que el JavaScript
+        // la lea: CORS solo expone unas pocas por defecto, y Content-Disposition
+        // no esta entre ellas. El frontend perderia el nombre del archivo que
+        // genera el servidor y tendria que inventarse uno.
+        .WithExposedHeaders("Content-Disposition")));
 
 builder.Services
     .AddControllers()
