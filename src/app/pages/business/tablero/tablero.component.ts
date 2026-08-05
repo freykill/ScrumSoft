@@ -340,6 +340,12 @@ export class TableroComponent implements OnInit {
         });
     }
 
+    verMiembros(): void {
+        this.router.navigate(['/business/proyectos', this.idProyecto, 'miembros'], {
+            state: { nombreProyecto: this.nombreProyecto }
+        });
+    }
+
     // ----------------------------------------------------------------- avisos
 
     private avisar(titulo: string, detalle: string): void {

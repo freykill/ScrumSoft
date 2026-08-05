@@ -1,0 +1,46 @@
+<p-dialog [visible]="visible"
+          (visibleChange)="visibleChange.emit($event)"
+          (onShow)="reiniciar()"
+          header="Agregar miembro"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{ width: '32rem' }"
+          [breakpoints]="{ '640px': '92vw' }">
+
+    <div class="flex flex-column gap-2 pt-2">
+        <label for="usuario" class="font-medium text-900">Usuario</label>
+
+        <!--
+            La busqueda va contra el servidor en cada tecla (completeMethod), no
+            se cargan todos los usuarios para filtrar aqui. appendTo="body" para
+            que el panel no quede cortado por el dialogo.
+        -->
+        <p-autoComplete inputId="usuario" [(ngModel)]="seleccionado" [suggestions]="sugerencias"
+                        (completeMethod)="buscar.emit($event.query)" field="nombre"
+                        appendTo="body" placeholder="Busca por nombre o correo"
+                        [forceSelection]="true" styleClass="w-full" inputStyleClass="w-full">
+
+            <ng-template let-usuario pTemplate="item">
+                <div class="flex flex-column">
+                    <span class="text-900">{{ usuario.nombre }}</span>
+                    <span class="text-600 text-sm">{{ usuario.correoElectronico }}</span>
+                </div>
+            </ng-template>
+        </p-autoComplete>
+
+        <small class="text-600">
+            Solo aparecen usuarios que todavia no estan en el proyecto.
+            Si falta alguien, creale la cuenta primero en Usuarios.
+        </small>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-text" (click)="cerrar()"></button>
+        <!-- Deshabilitado mientras no se haya elegido de la lista: con texto
+             suelto no hay id que mandar -->
+        <button pButton pRipple type="button" label="Agregar" icon="pi pi-check"
+                [loading]="guardando" [disabled]="!usuarioElegido" (click)="enviar()"></button>
+    </ng-template>
+</p-dialog>

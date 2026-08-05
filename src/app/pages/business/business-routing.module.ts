@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { ColumnasComponent } from './columnas/columnas.component';
+import { MiembrosComponent } from './miembros/miembros.component';
 import { ProyectosComponent } from './proyectos/proyectos.component';
 import { TableroComponent } from './tablero/tablero.component';
 import { UsuariosComponent } from './usuarios/usuarios.component';
@@ -12,6 +13,7 @@ import { UsuariosComponent } from './usuarios/usuarios.component';
 const routes: Routes = [
     { path: 'proyectos', component: ProyectosComponent },
     { path: 'proyectos/:idProyecto/columnas', component: ColumnasComponent },
+    { path: 'proyectos/:idProyecto/miembros', component: MiembrosComponent },
     { path: 'proyectos/:idProyecto/tablero', component: TableroComponent },
     // Atajo del menu: el tablero necesita un proyecto, asi que este entra sin
     // id y redirige al primero. La url buena sigue siendo la de arriba.

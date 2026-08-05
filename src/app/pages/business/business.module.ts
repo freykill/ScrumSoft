@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { ButtonModule } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { ChipsModule } from 'primeng/chips';
@@ -22,6 +23,9 @@ import { BusinessRoutingModule } from './business-routing.module';
 import { ColumnasComponent } from './columnas/columnas.component';
 import { ColumnasFormComponent } from './columnas/columnas-form/columnas-form.component';
 import { ColumnasListComponent } from './columnas/columnas-list/columnas-list.component';
+import { MiembrosComponent } from './miembros/miembros.component';
+import { MiembrosFormComponent } from './miembros/miembros-form/miembros-form.component';
+import { MiembrosListComponent } from './miembros/miembros-list/miembros-list.component';
 import { ProyectosComponent } from './proyectos/proyectos.component';
 import { ProyectosFormComponent } from './proyectos/proyectos-form/proyectos-form.component';
 import { ProyectosListComponent } from './proyectos/proyectos-list/proyectos-list.component';
@@ -47,6 +51,9 @@ import { UsuariosListComponent } from './usuarios/usuarios-list/usuarios-list.co
         ColumnasComponent,
         ColumnasListComponent,
         ColumnasFormComponent,
+        MiembrosComponent,
+        MiembrosListComponent,
+        MiembrosFormComponent,
         TableroComponent,
         TableroColumnaComponent,
         TableroFormComponent,
@@ -60,6 +67,7 @@ import { UsuariosListComponent } from './usuarios/usuarios-list/usuarios-list.co
         FormsModule,
         ReactiveFormsModule,
         BusinessRoutingModule,
+        AutoCompleteModule,
         ButtonModule,
         CalendarModule,
         ChipsModule,
