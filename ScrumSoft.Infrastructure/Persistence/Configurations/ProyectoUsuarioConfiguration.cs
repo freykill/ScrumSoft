@@ -45,9 +45,13 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
             builder.Property(m => m.FechaActualizacion)
                 .HasColumnName("fecha_actualizacion");
 
-            // Un usuario no puede estar dos veces en el mismo proyecto.
+            // Un usuario no puede estar dos veces en el mismo proyecto. El indice es
+            // parcial a proposito: al sacar a alguien la fila no se borra, se marca
+            // como eliminada, y sin el filtro no se le podria volver a agregar nunca.
+            // Las bajas anteriores quedan como historial de quien estuvo en el equipo.
             builder.HasIndex(m => new { m.IdProyecto, m.IdUsuario })
                 .IsUnique()
+                .HasFilter("estado = 'A'")
                 .HasDatabaseName("ux_proyecto_usuarios");
 
             // Consulta "mis proyectos".
