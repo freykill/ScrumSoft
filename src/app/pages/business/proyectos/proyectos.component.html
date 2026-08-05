@@ -26,7 +26,8 @@
     <app-proyectos-list [proyectos]="proyectos" [cargando]="cargando" [totalElementos]="totalElementos"
         [primeraFila]="primeraFila" [filasPorPagina]="filtros.tamanoPagina!"
         (paginar)="paginar($event)" (verTablero)="verTablero($event)" (verColumnas)="verColumnas($event)"
-        (editar)="editar($event)" (eliminar)="confirmarEliminacion($event)"></app-proyectos-list>
+        (verMiembros)="verMiembros($event)" (editar)="editar($event)"
+        (eliminar)="confirmarEliminacion($event)"></app-proyectos-list>
 </div>
 
 <app-proyectos-form [(visible)]="mostrarFormulario" [proyecto]="proyectoEnEdicion" [guardando]="guardando"

@@ -29,7 +29,7 @@
             <th style="width: 10rem">Fin previsto</th>
             <th style="width: 11rem">Estado</th>
             <th style="width: 7rem" class="text-center">Columnas</th>
-            <th style="width: 14rem" class="text-right">Acciones</th>
+            <th style="width: 16rem" class="text-right">Acciones</th>
         </tr>
     </ng-template>
 
@@ -54,6 +54,9 @@
                 <button pButton pRipple icon="pi pi-th-large" pTooltip="Configurar columnas" tooltipPosition="top"
                         class="p-button-text p-button-rounded mr-1"
                         (click)="verColumnas.emit(proyecto)"></button>
+                <button pButton pRipple icon="pi pi-users" pTooltip="Miembros" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        (click)="verMiembros.emit(proyecto)"></button>
                 <button pButton pRipple icon="pi pi-pencil" pTooltip="Editar" tooltipPosition="top"
                         class="p-button-text p-button-rounded mr-1"
                         (click)="editar.emit(proyecto)"></button>

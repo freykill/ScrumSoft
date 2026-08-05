@@ -222,6 +222,13 @@ export class ProyectosComponent implements OnInit {
         });
     }
 
+    /** Consultar y quitar miembros. Meterlos se hace desde la pantalla de usuarios. */
+    verMiembros(proyecto: ProyectoDto): void {
+        this.router.navigate(['/business/proyectos', proyecto.id, 'miembros'], {
+            state: { nombreProyecto: proyecto.nombre }
+        });
+    }
+
     verTablero(proyecto: ProyectoDto): void {
         this.router.navigate(['/business/proyectos', proyecto.id, 'tablero'], {
             state: { nombreProyecto: proyecto.nombre }

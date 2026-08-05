@@ -15,7 +15,8 @@ const SUGERENCIAS = 8;
  * Contenedor de los miembros de UN proyecto.
  *
  * Cuelga de /business/proyectos/:idProyecto/miembros, igual que columnas: en
- * la API un miembro no existe fuera de su proyecto.
+ * la API un miembro no existe fuera de su proyecto, y se entra desde la fila
+ * del proyecto, que es donde vive su administracion.
  *
  * Agregar no es un alta de usuario: se busca a alguien que ya existe con
  * UsuarioService y se manda su id. Por eso el buscador vive aqui y no en el

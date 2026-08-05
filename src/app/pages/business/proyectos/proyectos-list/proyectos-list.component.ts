@@ -28,6 +28,7 @@ export class ProyectosListComponent {
     @Output() paginar = new EventEmitter<PaginaSolicitada>();
     @Output() verTablero = new EventEmitter<ProyectoDto>();
     @Output() verColumnas = new EventEmitter<ProyectoDto>();
+    @Output() verMiembros = new EventEmitter<ProyectoDto>();
     @Output() editar = new EventEmitter<ProyectoDto>();
     @Output() eliminar = new EventEmitter<ProyectoDto>();
 
