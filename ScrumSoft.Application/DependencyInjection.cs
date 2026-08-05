@@ -48,6 +48,8 @@ namespace ScrumSoft.Application
 
             // Usuarios
             servicios.AddScoped<IManejador<ListarUsuariosConsulta, PagedResult<UsuarioDto>>, ListarUsuariosHandler>();
+            servicios.AddScoped<IManejador<CrearUsuarioComando, UsuarioDto>, CrearUsuarioHandler>();
+            servicios.AddScoped<IManejador<ActualizarUsuarioComando, UsuarioDto>, ActualizarUsuarioHandler>();
 
             // Columnas
             servicios.AddScoped<IManejador<AgregarColumnaComando, ColumnaDto>, AgregarColumnaHandler>();
