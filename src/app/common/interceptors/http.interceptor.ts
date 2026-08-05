@@ -25,24 +25,15 @@ export class HttpRequestInterceptor implements HttpInterceptor {
             });
         }
 
-        // El propio login responde 403 con credenciales malas. Si lo tratamos como
-        // los demas, meter mal la clave te expulsaria a /auth/access en vez de
-        // mostrar el error en pantalla.
-        const esLogin = request.url.includes('/auth/login');
-
         return next.handle(request).pipe(
             catchError((error: HttpErrorResponse) => {
-                // Token invalido o expirado: se limpia la sesion y fuera
-                if (error.status === 401 && !esLogin) {
+                
+                if (error.status === 401) {
                     this.auth.cerrarSesion();
                     this.router.navigate(['/auth/login']);
                 }
 
-                // Autenticado pero sin permiso sobre el recurso
-                if (error.status === 403 && !esLogin) {
-                    this.router.navigate(['/auth/access']);
-                }
-
+       
                 return throwError(() => error);
             })
         );

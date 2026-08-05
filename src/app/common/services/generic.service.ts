@@ -213,7 +213,7 @@ export class GenericService {
             error.status = raw.status;
             error.message = raw.status === 0
                 ? 'Problemas de conectividad, verifique su conexion a Internet'
-                : this.extractServerMessage(raw) ?? raw.message;
+                : this.extractServerMessage(raw) ?? this.mensajePorEstado(raw.status);
         } else if (raw instanceof Error) {
             error.message = raw.message;
         } else {
@@ -223,6 +223,26 @@ export class GenericService {
         error.originalError = raw;
         error.timestamp = Date.now();
         return error;
+    }
+
+    /**
+     * Mensaje de respaldo cuando la respuesta de error no trae cuerpo.
+     *
+     * Pasa de verdad: el backend contesta 403 con Content-Length 0, y sin esto
+     * el toast mostraba el texto crudo de Angular ("Http failure response for
+     * https://...: 403 OK"), que ademas de no explicar nada acaba en "OK".
+     */
+    private mensajePorEstado(status: number): string {
+        const mensajes: Record<number, string> = {
+            400: 'Los datos enviados no son validos.',
+            401: 'Tu sesion expiro, vuelve a iniciar sesion.',
+            403: 'No tienes permiso para realizar esta accion.',
+            404: 'No se encontro lo que buscabas.',
+            409: 'Ese registro ya existe o esta en uso.',
+            500: 'Error en el servidor. Intentalo de nuevo en un momento.'
+        };
+
+        return mensajes[status] ?? 'No se pudo completar la operacion.';
     }
 
     /** Intenta sacar el mensaje que manda el backend en vez del generico de Angular. */
