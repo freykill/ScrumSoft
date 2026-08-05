@@ -54,13 +54,16 @@
             <label for="columnas" class="font-medium text-900">Columnas iniciales</label>
             <p-chips inputId="columnas" formControlName="columnas" [addOnBlur]="true"
                      placeholder="Escribe y pulsa Enter" styleClass="w-full"></p-chips>
-            <small class="text-600">Se crea el tablero con estas etapas. Despues se pueden cambiar.</small>
+            <small class="p-error" *ngIf="invalido('columnas')">Deja al menos una columna.</small>
+            <small class="text-600" *ngIf="!invalido('columnas')">
+                Se crea el tablero con estas etapas. Despues se pueden cambiar.
+            </small>
         </div>
 
         <!-- Solo al editar: al crear, el proyecto nace en Planificacion -->
         <div class="flex flex-column gap-2" *ngIf="!esNuevo">
             <label for="estado" class="font-medium text-900">Estado</label>
-            <p-dropdown inputId="estado" formControlName="estadoProyecto" [options]="opcionesEstado"
+            <p-dropdown inputId="estado" formControlName="estadoProyecto" appendTo="body" [options]="opcionesEstado"
                         optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
         </div>
     </form>

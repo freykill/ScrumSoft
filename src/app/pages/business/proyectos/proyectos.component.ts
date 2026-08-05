@@ -1,18 +1,19 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { TOAST_LIFE } from 'src/app/config/app.constants';
-import { EstadoProyecto } from 'src/app/enums';
-import { GuardarProyectoComando, ProyectoDto, ProyectoFiltros } from 'src/app/models';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { DEBOUNCE_BUSQUEDA, PAGINACION, TOAST_LIFE } from 'src/app/config/app.constants';
+import { GuardarProyectoComando, PaginaSolicitada, ProyectoDto, ProyectoFiltros } from 'src/app/models';
+import { ProyectoService } from 'src/app/services';
 
 /**
  * Contenedor de la pantalla de proyectos.
  *
- * OJO: hoy filtra en memoria sobre el mock. La API pagina y filtra por nombre
- * en el servidor (GET /api/v1/proyectos?nombre=&pagina=&tamanoPagina=), asi
- * que cuando entre ProyectoService este contenedor pasa a tabla lazy:
- * `aplicarFiltros()` se convierte en la llamada al servicio y la lista recibe
- * ademas el total de elementos. Los filtros ya tienen la forma del query.
+ * La API pagina y filtra en el servidor, asi que la tabla es lazy: aqui solo
+ * vive la pagina que se esta viendo, no la coleccion entera. Cualquier cambio
+ * de filtro o de pagina termina en una llamada a `cargar()`.
  */
 @Component({
     selector: 'app-proyectos',
@@ -21,68 +22,109 @@ import { GuardarProyectoComando, ProyectoDto, ProyectoFiltros } from 'src/app/mo
 })
 export class ProyectosComponent implements OnInit {
 
-    /** Fuente de verdad. MOCK: reemplazar por ProyectoService -> GET /api/v1/proyectos */
-    private proyectos: ProyectoDto[] = [
-        {
-            id: '1', nombre: 'Migracion ERP', descripcion: 'Traslado del ERP a la nube',
-            fechaInicio: '2026-01-10', fechaFinPrevista: '2026-06-30',
-            estadoProyecto: EstadoProyecto.EnProgreso, cantidadColumnas: 4
-        },
-        {
-            id: '2', nombre: 'App movil de campo', descripcion: 'Levantamiento de datos offline',
-            fechaInicio: '2026-03-01', fechaFinPrevista: '2026-09-15',
-            estadoProyecto: EstadoProyecto.Planificacion, cantidadColumnas: 3
-        },
-        {
-            id: '3', nombre: 'Portal de clientes', descripcion: null,
-            fechaInicio: '2025-09-05', fechaFinPrevista: '2026-01-20',
-            estadoProyecto: EstadoProyecto.Completado, cantidadColumnas: 5
-        }
-    ];
+    /** Solo la pagina actual, no todos los proyectos. */
+    proyectos: ProyectoDto[] = [];
+    /** Total del servidor, es lo que dimensiona el paginador. */
+    totalElementos = 0;
 
-    /** Lo que realmente ve la tabla. */
-    proyectosVisibles: ProyectoDto[] = [];
     cargando = false;
     guardando = false;
 
-    /** Mismo nombre que el query param de la API, para que el cambio sea directo. */
-    filtros: ProyectoFiltros = { nombre: '' };
+    /** Tiene la forma exacta del query del GET, se manda tal cual al servicio. */
+    filtros: ProyectoFiltros = {
+        nombre: '',
+        pagina: 1,
+        tamanoPagina: PAGINACION.LIMIT
+    };
 
     mostrarFormulario = false;
     proyectoEnEdicion: ProyectoDto | null = null;
 
+    private readonly destroyRef = inject(DestroyRef);
+    private readonly textoBuscado = new Subject<string>();
+
+    /**
+     * Descarta respuestas viejas. Con el servidor de por medio dos busquedas
+     * seguidas pueden volver en desorden y dejar en pantalla el resultado de
+     * la que ya no interesa.
+     */
+    private peticionActual = 0;
+
     constructor(
+        private readonly proyectoService: ProyectoService,
         private readonly router: Router,
         private readonly confirmacion: ConfirmationService,
         private readonly mensajes: MessageService
     ) { }
 
     ngOnInit(): void {
-        this.aplicarFiltros();
+        // Escribir no puede disparar una peticion por tecla: se espera a que el
+        // usuario pare, y si el texto quedo igual que el anterior no se repite.
+        this.textoBuscado.pipe(
+            debounceTime(DEBOUNCE_BUSQUEDA),
+            distinctUntilChanged(),
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(() => this.irAPrimeraPagina());
+
+        this.cargar();
+    }
+
+    /**
+     * Indice de la primera fila de la pagina actual, que es lo que entiende el
+     * paginador. Getter y no campo porque devuelve un numero: no crea
+     * referencias nuevas, asi que no rompe el OnPush de la lista.
+     */
+    get primeraFila(): number {
+        return (this.filtros.pagina! - 1) * this.filtros.tamanoPagina!;
+    }
+
+    // ---------------------------------------------------------------- carga
+
+    private async cargar(): Promise<void> {
+        const peticion = ++this.peticionActual;
+        this.cargando = true;
+
+        try {
+            const resultado = await this.proyectoService.listar(this.filtros);
+            if (peticion !== this.peticionActual) { return; }
+
+            this.proyectos = resultado.elementos ?? [];
+            this.totalElementos = resultado.totalElementos ?? 0;
+        } catch (error) {
+            if (peticion !== this.peticionActual) { return; }
+
+            this.proyectos = [];
+            this.totalElementos = 0;
+            this.avisarError('No se pudieron cargar los proyectos', error);
+        } finally {
+            if (peticion === this.peticionActual) {
+                this.cargando = false;
+            }
+        }
     }
 
     // ---------------------------------------------------------------- filtros
 
     /**
-     * Solo se filtra por nombre y por coincidencia parcial, que es lo unico
-     * que la API sabe hacer. No se agregan filtros que el servidor no soporte:
-     * con paginacion en servidor solo filtrarian la pagina actual, y eso es
-     * un error que se ve en produccion, no en el mock.
+     * Solo se filtra por nombre, que es lo unico que la API sabe hacer. Un
+     * filtro que el servidor no soporte filtraria unicamente la pagina que
+     * esta cargada, y ese error no se ve hasta que hay datos de verdad.
      */
-    aplicarFiltros(): void {
-        const texto = (this.filtros.nombre ?? '').trim().toLowerCase();
-        this.proyectosVisibles = this.proyectos.filter(
-            proyecto => !texto || proyecto.nombre.toLowerCase().includes(texto)
-        );
+    buscar(texto: string): void {
+        this.textoBuscado.next(texto);
     }
 
-    limpiarFiltros(): void {
-        this.filtros = { nombre: '' };
-        this.aplicarFiltros();
+    /** Al cambiar el filtro hay que volver al principio: la pagina 4 puede ya no existir. */
+    private irAPrimeraPagina(): void {
+        this.filtros = { ...this.filtros, pagina: 1 };
+        this.cargar();
     }
 
-    get hayFiltrosActivos(): boolean {
-        return !!this.filtros.nombre;
+    // -------------------------------------------------------------- paginacion
+
+    paginar(pagina: PaginaSolicitada): void {
+        this.filtros = { ...this.filtros, pagina: pagina.pagina, tamanoPagina: pagina.tamanoPagina };
+        this.cargar();
     }
 
     // ------------------------------------------------------------ formulario
@@ -97,43 +139,42 @@ export class ProyectosComponent implements OnInit {
         this.mostrarFormulario = true;
     }
 
-    guardar(datos: GuardarProyectoComando): void {
-        if (this.proyectoEnEdicion) {
-            const id = this.proyectoEnEdicion.id;
-            // Array y objeto nuevos: la lista es OnPush.
-            this.proyectos = this.proyectos.map(proyecto =>
-                proyecto.id === id
-                    ? {
-                        ...proyecto,
-                        nombre: datos.nombre,
-                        descripcion: datos.descripcion,
-                        fechaInicio: datos.fechaInicio,
-                        fechaFinPrevista: datos.fechaFinPrevista,
-                        estadoProyecto: datos.estadoProyecto ?? proyecto.estadoProyecto
-                    }
-                    : proyecto
-            );
-            this.avisar('Proyecto actualizado', datos.nombre);
-        } else {
-            this.proyectos = [
-                ...this.proyectos,
-                {
-                    id: crypto.randomUUID(),
+    async guardar(datos: GuardarProyectoComando): Promise<void> {
+        this.guardando = true;
+
+        try {
+            if (this.proyectoEnEdicion) {
+                await this.proyectoService.actualizar({
+                    id: this.proyectoEnEdicion.id,
                     nombre: datos.nombre,
                     descripcion: datos.descripcion,
                     fechaInicio: datos.fechaInicio,
                     fechaFinPrevista: datos.fechaFinPrevista,
-                    // Un proyecto nuevo siempre nace en planificacion, la API no
-                    // recibe el estado en el alta.
-                    estadoProyecto: EstadoProyecto.Planificacion,
-                    cantidadColumnas: datos.columnas?.length ?? 0
-                }
-            ];
-            this.avisar('Proyecto creado', datos.nombre);
-        }
+                    // El estado solo lo trae el formulario en edicion; si faltara
+                    // se conserva el que ya tenia, nunca se manda vacio.
+                    estadoProyecto: datos.estadoProyecto ?? this.proyectoEnEdicion.estadoProyecto
+                });
+                this.avisar('Proyecto actualizado', datos.nombre);
+            } else {
+                await this.proyectoService.crear({
+                    nombre: datos.nombre,
+                    descripcion: datos.descripcion,
+                    fechaInicio: datos.fechaInicio,
+                    fechaFinPrevista: datos.fechaFinPrevista,
+                    columnas: datos.columnas?.length ? datos.columnas : null
+                });
+                this.avisar('Proyecto creado', datos.nombre);
+            }
 
-        this.mostrarFormulario = false;
-        this.aplicarFiltros();
+            // El dialogo se cierra solo si el backend acepto. Si falla, el
+            // usuario conserva lo que escribio y puede corregir y reintentar.
+            this.mostrarFormulario = false;
+            await this.cargar();
+        } catch (error) {
+            this.avisarError('No se pudo guardar el proyecto', error);
+        } finally {
+            this.guardando = false;
+        }
     }
 
     // -------------------------------------------------------------- eliminar
@@ -151,10 +192,21 @@ export class ProyectosComponent implements OnInit {
         });
     }
 
-    private eliminar(proyecto: ProyectoDto): void {
-        this.proyectos = this.proyectos.filter(actual => actual.id !== proyecto.id);
-        this.aplicarFiltros();
-        this.avisar('Proyecto eliminado', proyecto.nombre);
+    private async eliminar(proyecto: ProyectoDto): Promise<void> {
+        try {
+            await this.proyectoService.eliminar(proyecto.id);
+            this.avisar('Proyecto eliminado', proyecto.nombre);
+
+            // Era el ultimo de la pagina: hay que retroceder o la tabla se
+            // queda vacia en una pagina que ya no existe.
+            if (this.proyectos.length === 1 && this.filtros.pagina! > 1) {
+                this.filtros = { ...this.filtros, pagina: this.filtros.pagina! - 1 };
+            }
+
+            await this.cargar();
+        } catch (error) {
+            this.avisarError('No se pudo eliminar el proyecto', error);
+        }
     }
 
     // ------------------------------------------------- navegacion al proyecto
@@ -174,7 +226,17 @@ export class ProyectosComponent implements OnInit {
         });
     }
 
+    // ----------------------------------------------------------------- avisos
+
     private avisar(titulo: string, detalle: string): void {
         this.mensajes.add({ severity: 'success', summary: titulo, detail: detalle, life: TOAST_LIFE });
+    }
+
+    /** GenericService ya trae el `detail` del ProblemDetails dentro del Error. */
+    private avisarError(titulo: string, error: unknown): void {
+        const detalle = error instanceof Error && error.message
+            ? error.message
+            : 'Ocurrio un error inesperado.';
+        this.mensajes.add({ severity: 'error', summary: titulo, detail: detalle, life: TOAST_LIFE });
     }
 }

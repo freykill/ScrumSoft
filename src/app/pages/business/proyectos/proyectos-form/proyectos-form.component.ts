@@ -59,7 +59,14 @@ export class ProyectosFormComponent {
 
     /** Se llama desde (onShow) del p-dialog, ver la nota en usuarios-form. */
     reiniciar(): void {
+        // Los validadores se ajustan antes del reset: es el reset el que
+        // recalcula la validez, si se hiciera al reves el formulario abriria
+        // marcado con el estado del modo anterior.
         if (this.proyecto) {
+            // En edicion las columnas no se tocan desde aqui, tienen su
+            // propia pantalla, asi que el control deja de ser obligatorio.
+            this.form.controls.columnas.clearValidators();
+
             this.form.reset({
                 nombre: this.proyecto.nombre,
                 descripcion: this.proyecto.descripcion ?? '',
@@ -69,6 +76,11 @@ export class ProyectosFormComponent {
                 columnas: []
             });
         } else {
+            // Un tablero sin columnas no admite ni una tarea, y las columnas
+            // solo se mandan en el alta: si se crea vacio hay que ir a la otra
+            // pantalla antes de poder usarlo. Por eso se exige al menos una.
+            this.form.controls.columnas.setValidators(Validators.required);
+
             this.form.reset({
                 nombre: '',
                 descripcion: '',

@@ -19,13 +19,14 @@
         <span class="p-input-icon-left w-full lg:w-30rem">
             <i class="pi pi-search"></i>
             <input pInputText type="text" class="w-full" placeholder="Buscar por nombre"
-                [(ngModel)]="filtros.nombre" (ngModelChange)="aplicarFiltros()">
+                [(ngModel)]="filtros.nombre" (ngModelChange)="buscar($event)">
         </span>
     </div>
 
-    <app-proyectos-list [proyectos]="proyectosVisibles" [cargando]="cargando"
-        (verTablero)="verTablero($event)" (verColumnas)="verColumnas($event)" (editar)="editar($event)"
-        (eliminar)="confirmarEliminacion($event)"></app-proyectos-list>
+    <app-proyectos-list [proyectos]="proyectos" [cargando]="cargando" [totalElementos]="totalElementos"
+        [primeraFila]="primeraFila" [filasPorPagina]="filtros.tamanoPagina!"
+        (paginar)="paginar($event)" (verTablero)="verTablero($event)" (verColumnas)="verColumnas($event)"
+        (editar)="editar($event)" (eliminar)="confirmarEliminacion($event)"></app-proyectos-list>
 </div>
 
 <app-proyectos-form [(visible)]="mostrarFormulario" [proyecto]="proyectoEnEdicion" [guardando]="guardando"

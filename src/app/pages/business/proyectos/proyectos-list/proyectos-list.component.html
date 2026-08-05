@@ -1,7 +1,21 @@
+<!--
+    lazy + lazyLoadOnInit="false": la primera carga la dispara el contenedor en
+    su ngOnInit, aqui solo se avisa cuando el usuario cambia de pagina o de
+    tamano. Si se dejara el valor por defecto habria dos peticiones al entrar.
+
+    Sin cabeceras ordenables a proposito: en modo lazy el orden lo tendria que
+    resolver el servidor, y el GET de proyectos no recibe parametro de orden.
+    Un p-sortableColumn aqui solo reordenaria la pagina que se esta viendo.
+-->
 <p-table [value]="proyectos"
+         [lazy]="true"
+         [lazyLoadOnInit]="false"
+         (onLazyLoad)="alPaginar($event)"
          [loading]="cargando"
+         [paginator]="true"
+         [first]="primeraFila"
          [rows]="filasPorPagina"
-         [paginator]="proyectos.length > filasPorPagina"
+         [totalRecords]="totalElementos"
          [rowsPerPageOptions]="opcionesPagina"
          [showCurrentPageReport]="true"
          currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} proyectos"
@@ -10,8 +24,8 @@
 
     <ng-template pTemplate="header">
         <tr>
-            <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
-            <th pSortableColumn="fechaInicio" style="width: 9rem">Inicio <p-sortIcon field="fechaInicio"></p-sortIcon></th>
+            <th>Nombre</th>
+            <th style="width: 9rem">Inicio</th>
             <th style="width: 10rem">Fin previsto</th>
             <th style="width: 11rem">Estado</th>
             <th style="width: 7rem" class="text-center">Columnas</th>
@@ -53,7 +67,7 @@
         <tr>
             <td colspan="6" class="text-center py-6">
                 <i class="pi pi-briefcase text-4xl text-300 block mb-3"></i>
-                <span class="text-600">No hay proyectos que coincidan con la busqueda.</span>
+                <span class="text-600">No hay proyectos para mostrar.</span>
             </td>
         </tr>
     </ng-template>
