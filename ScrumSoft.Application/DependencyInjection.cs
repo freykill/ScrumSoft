@@ -41,6 +41,11 @@ namespace ScrumSoft.Application
             servicios.AddScoped<IManejador<EliminarProyectoComando, Unidad>, EliminarProyectoHandler>();
             servicios.AddScoped<IManejador<ListarProyectosConsulta, PagedResult<ProyectoDto>>, ListarProyectosHandler>();
 
+            // Equipo del proyecto
+            servicios.AddScoped<IManejador<ListarMiembrosConsulta, IReadOnlyList<MiembroDto>>, ListarMiembrosHandler>();
+            servicios.AddScoped<IManejador<AgregarMiembroComando, MiembroDto>, AgregarMiembroHandler>();
+            servicios.AddScoped<IManejador<QuitarMiembroComando, Unidad>, QuitarMiembroHandler>();
+
             // Usuarios
             servicios.AddScoped<IManejador<ListarUsuariosConsulta, PagedResult<UsuarioDto>>, ListarUsuariosHandler>();
 

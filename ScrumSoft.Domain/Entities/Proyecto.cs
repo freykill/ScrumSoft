@@ -131,8 +131,20 @@ namespace ScrumSoft.Domain.Entities
                 existente.Activar();
         }
 
-        public void QuitarMiembro(Guid idUsuario) =>
-            _miembros.FirstOrDefault(m => m.IdUsuario == idUsuario)?.MarcarComoEliminada();
+        public void QuitarMiembro(Guid idUsuario)
+        {
+            var miembro = _miembros.FirstOrDefault(m => m.IdUsuario == idUsuario && m.EstaActiva());
+
+            if (miembro is null)
+                return;
+
+            // Un proyecto sin miembros no aparece en la lista de nadie: quedaria
+            // vivo en la base pero inalcanzable desde la aplicacion.
+            if (Miembros.Count == 1)
+                throw new DomainException("El proyecto debe conservar al menos un miembro.");
+
+            miembro.MarcarComoEliminada();
+        }
 
         public bool EsMiembro(Guid idUsuario) =>
             _miembros.Any(m => m.IdUsuario == idUsuario && m.EstaActiva());
