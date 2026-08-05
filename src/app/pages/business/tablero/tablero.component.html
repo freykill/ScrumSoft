@@ -27,6 +27,13 @@
                         placeholder="Elige un proyecto" [autoDisplayFirst]="false"
                         styleClass="w-full sm:w-18rem"></p-dropdown>
 
+            <!-- Menu explicito en vez de un boton con formato por defecto:
+                 generar el binario tarda y elegir mal obliga a repetirlo -->
+            <p-menu #menuReporte [model]="opcionesReporte" [popup]="true" appendTo="body"></p-menu>
+            <button pButton pRipple icon="pi pi-download" label="Reporte" class="p-button-outlined"
+                [loading]="descargando" [disabled]="!idProyecto"
+                (click)="menuReporte.toggle($event)"></button>
+
             <button pButton pRipple icon="pi pi-th-large" label="Columnas" class="p-button-outlined"
                 [disabled]="!idProyecto" (click)="verColumnas()"></button>
         </div>

@@ -1,11 +1,11 @@
 import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { DEBOUNCE_BUSQUEDA, TOAST_LIFE } from 'src/app/config/app.constants';
-import { OPCIONES_PRIORIDAD, Prioridad } from 'src/app/enums';
+import { FormatoDeReporte, OPCIONES_PRIORIDAD, Prioridad } from 'src/app/enums';
 import {
     ColumnaConTareasDto,
     ColumnaDto,
@@ -19,10 +19,11 @@ import {
 import {
     MiembroService,
     ProyectoService,
+    ReporteService,
     TableroRealtimeService,
     TareaService
 } from 'src/app/services';
-import { calcularVecinos } from 'src/app/utilities';
+import { aNombreDeArchivo, calcularVecinos, descargarBlob } from 'src/app/utilities';
 
 /**
  * Cuantos proyectos entran en el selector. El desplegable filtra en cliente,
@@ -74,6 +75,19 @@ export class TableroComponent implements OnInit, OnDestroy {
 
     cargando = false;
     guardando = false;
+    descargando = false;
+
+    /** Se elige formato en vez de asumir uno: el binario pesa y tarda. */
+    readonly opcionesReporte: MenuItem[] = [
+        {
+            label: 'Descargar PDF', icon: 'pi pi-file-pdf',
+            command: () => this.descargarReporte(FormatoDeReporte.Pdf)
+        },
+        {
+            label: 'Descargar Excel', icon: 'pi pi-file-excel',
+            command: () => this.descargarReporte(FormatoDeReporte.Excel)
+        }
+    ];
 
     /** Hay conexion con el hub, o sea que se ven los cambios de los demas. */
     enVivo = false;
@@ -101,6 +115,7 @@ export class TableroComponent implements OnInit, OnDestroy {
         private readonly proyectoService: ProyectoService,
         private readonly tareaService: TareaService,
         private readonly miembroService: MiembroService,
+        private readonly reporteService: ReporteService,
         private readonly enVivoService: TableroRealtimeService,
         private readonly confirmacion: ConfirmationService,
         private readonly mensajes: MessageService
@@ -545,6 +560,37 @@ export class TableroComponent implements OnInit, OnDestroy {
             this.recalcularResumen();
             this.avisarError('No se pudo eliminar la tarea', error);
         }
+    }
+
+    // ---------------------------------------------------------------- reporte
+
+    /**
+     * Se manda con los filtros que esten puestos, para que el archivo diga lo
+     * mismo que la pantalla. Si el usuario esta viendo solo sus tareas, el
+     * reporte trae solo las suyas.
+     */
+    private async descargarReporte(formato: FormatoDeReporte): Promise<void> {
+        this.descargando = true;
+
+        try {
+            const archivo = await this.reporteService.descargar(this.idProyecto, formato, this.filtros);
+            descargarBlob(archivo.blob, archivo.nombre ?? this.nombreDeRespaldo(formato));
+        } catch (error) {
+            this.avisarError('No se pudo generar el reporte', error);
+        } finally {
+            this.descargando = false;
+        }
+    }
+
+    /**
+     * El nombre bueno lo pone el servidor en Content-Disposition, pero esa
+     * cabecera no se puede leer entre origenes distintos si el backend no la
+     * anuncia en Access-Control-Expose-Headers. Cuando no llega, se arma uno
+     * aqui en vez de dejar que el navegador lo llame "descarga".
+     */
+    private nombreDeRespaldo(formato: FormatoDeReporte): string {
+        const extension = formato === FormatoDeReporte.Pdf ? 'pdf' : 'xlsx';
+        return `${aNombreDeArchivo(`reporte-${this.nombreProyecto || 'proyecto'}`)}.${extension}`;
     }
 
     // ------------------------------------------------------------- navegacion

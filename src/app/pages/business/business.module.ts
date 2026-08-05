@@ -12,6 +12,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { InputTextareaModule } from 'primeng/inputtextarea';
+import { MenuModule } from 'primeng/menu';
 import { PasswordModule } from 'primeng/password';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { RippleModule } from 'primeng/ripple';
@@ -76,6 +77,7 @@ import { UsuariosListComponent } from './usuarios/usuarios-list/usuarios-list.co
         DropdownModule,
         InputTextModule,
         InputTextareaModule,
+        MenuModule,
         PasswordModule,
         ProgressSpinnerModule,
         RippleModule,

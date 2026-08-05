@@ -30,7 +30,7 @@ export class UrlServices {
     urlProyecto = (idProyecto: string): string => `${this.urlProyectos}/${idProyecto}`;
     urlProyectoTablero = (idProyecto: string): string => `${this.urlProyecto(idProyecto)}/tablero`;
 
-    // --- Reportes (devuelve archivo: usar METHODS.FILE) ---
+    // --- Reportes (devuelve archivo: usar GenericService.descargarArchivo) ---
     urlProyectoReporte = (idProyecto: string): string => `${this.urlProyecto(idProyecto)}/reporte`;
 
     // --- Columnas ---

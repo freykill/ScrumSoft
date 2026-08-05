@@ -8,8 +8,14 @@ export enum METHODS {
     POST = 'post',
     PUT = 'put',
     PATCH = 'patch',
-    DELETE = 'delete',
-    FILE = 'file'   // GET que devuelve blob (descargas)
+    DELETE = 'delete'
+}
+
+/** Lo que devuelve una descarga: el contenido y el nombre que puso el servidor. */
+export interface ArchivoDescargado {
+    blob: Blob;
+    /** null si no se pudo leer Content-Disposition; ver descargarArchivo(). */
+    nombre: string | null;
 }
 
 /** Opciones adicionales por llamada. */
@@ -78,6 +84,80 @@ export class GenericService {
         const url = this.buildUrl(endpoint, pathParam);
         const payload = options?.cleanBody ? this.cleanBody(body) : body;
         return this.buildRequest<T>(method, url, payload, this.buildParams(queryParams), this.buildHeaders(body, options));
+    }
+
+    /**
+     * Descarga un archivo.
+     *
+     * Va aparte de genericCallServices porque necesita la respuesta entera y no
+     * solo el cuerpo: el nombre del archivo viaja en la cabecera
+     * Content-Disposition, y con el `responseType: blob` de siempre esa
+     * cabecera no se ve.
+     *
+     * OJO con CORS: llamando a otro origen (localhost:4200 -> localhost:7086)
+     * el navegador solo deja leer un puñado de cabeceras, y Content-Disposition
+     * no esta entre ellas salvo que el servidor la anuncie en
+     * Access-Control-Expose-Headers. Si no lo hace, `nombre` viene null y quien
+     * llama tiene que poner uno; por eso no se inventa aqui.
+     */
+    async descargarArchivo(
+        endpoint: string,
+        queryParams: Map<string, any> | Record<string, any> | null = null
+    ): Promise<ArchivoDescargado> {
+        try {
+            const respuesta = await firstValueFrom(this._http.get(endpoint, {
+                params: this.buildParams(queryParams),
+                responseType: 'blob',
+                observe: 'response'
+            }));
+
+            return {
+                blob: respuesta.body ?? new Blob(),
+                nombre: this.extractFileName(respuesta.headers.get('Content-Disposition'))
+            };
+        } catch (error) {
+            throw await this.normalizeFileError(error);
+        }
+    }
+
+    /**
+     * `attachment; filename="reporte.pdf"` o, si el nombre lleva acentos o
+     * espacios, `filename*=UTF-8''reporte%20final.pdf`. Se prefiere el segundo,
+     * que es el que conserva los caracteres tal cual.
+     */
+    private extractFileName(cabecera: string | null): string | null {
+        if (!cabecera) { return null; }
+
+        const codificado = /filename\*=UTF-8''([^;]+)/i.exec(cabecera);
+        if (codificado) {
+            return decodeURIComponent(codificado[1].trim());
+        }
+
+        const simple = /filename="?([^";]+)"?/i.exec(cabecera);
+        return simple ? simple[1].trim() : null;
+    }
+
+    /**
+     * Pidiendo un blob, el cuerpo del ERROR tambien llega como Blob, asi que el
+     * ProblemDetails no se puede leer como en las demas llamadas y el aviso
+     * quedaria en el generico. Se pasa a texto para sacarle el `detail`.
+     */
+    private async normalizeFileError(raw: unknown): Promise<HttpServiceError> {
+        if (raw instanceof HttpErrorResponse && raw.error instanceof Blob) {
+            try {
+                const cuerpo = JSON.parse(await raw.error.text());
+                return this.normalizeError(new HttpErrorResponse({
+                    error: cuerpo,
+                    status: raw.status,
+                    statusText: raw.statusText,
+                    url: raw.url ?? undefined
+                }));
+            } catch {
+                // No era json: se cae al mensaje por estado de siempre.
+            }
+        }
+
+        return this.normalizeError(raw);
     }
 
     /** Bucle de reintentos. Cualquier fallo sale como HttpServiceError. */
@@ -179,8 +259,6 @@ export class GenericService {
         switch (method) {
             case METHODS.GET:
                 return this._http.get<T>(url, opts);
-            case METHODS.FILE:
-                return this._http.get<T>(url, { ...opts, responseType: 'blob' as 'json' });
             case METHODS.POST:
                 return this._http.post<T>(url, body, opts);
             case METHODS.PUT:
@@ -197,9 +275,9 @@ export class GenericService {
         }
     }
 
-    /** GET y FILE no cambian estado, por eso se pueden reintentar sin duplicar nada. */
+    /** El GET no cambia estado, por eso se puede reintentar sin duplicar nada. */
     private isIdempotent(method: METHODS): boolean {
-        return method === METHODS.GET || method === METHODS.FILE;
+        return method === METHODS.GET;
     }
 
     private isRetryable(error: unknown): boolean {
