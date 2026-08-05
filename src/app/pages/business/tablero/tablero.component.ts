@@ -2,8 +2,10 @@ import { Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core'
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { TOAST_LIFE } from 'src/app/config/app.constants';
-import { Prioridad } from 'src/app/enums';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { DEBOUNCE_BUSQUEDA, TOAST_LIFE } from 'src/app/config/app.constants';
+import { OPCIONES_PRIORIDAD, Prioridad } from 'src/app/enums';
 import {
     ColumnaConTareasDto,
     ColumnaDto,
@@ -11,6 +13,7 @@ import {
     MiembroDto,
     ProyectoDto,
     SoltarTarea,
+    TableroFiltros,
     TareaDto
 } from 'src/app/models';
 import {
@@ -26,6 +29,12 @@ import { calcularVecinos } from 'src/app/utilities';
  * asi que pasado este tope habria que buscar contra el servidor.
  */
 const TOPE_DEL_SELECTOR = 100;
+
+/**
+ * Espera para juntar varios eventos del hub en una sola recarga. Corto: es
+ * para agrupar rafagas, no para que se note.
+ */
+const ESPERA_DE_RECARGA = 300;
 
 /**
  * Tablero de UN proyecto, con selector para saltar entre ellos.
@@ -59,6 +68,10 @@ export class TableroComponent implements OnInit, OnDestroy {
     /** id -> nombre, para que la tarjeta no recorra la lista por cada tarea. */
     nombresDeMiembros = new Map<string, string>();
 
+    /** Filtran las tareas en el servidor; las columnas siempre vienen todas. */
+    filtros: TableroFiltros = { idResponsable: null, prioridad: null, texto: '' };
+    readonly opcionesPrioridad = OPCIONES_PRIORIDAD;
+
     cargando = false;
     guardando = false;
 
@@ -76,6 +89,11 @@ export class TableroComponent implements OnInit, OnDestroy {
 
     private readonly destroyRef = inject(DestroyRef);
     private listaPedida = false;
+
+    private readonly textoBuscado = new Subject<string>();
+    private readonly recargaPedida = new Subject<void>();
+    /** Descarta respuestas de cargas que ya quedaron atras. */
+    private peticionActual = 0;
 
     constructor(
         private readonly rutaActiva: ActivatedRoute,
@@ -96,6 +114,19 @@ export class TableroComponent implements OnInit, OnDestroy {
         this.rutaActiva.paramMap
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(parametros => this.alNavegar(parametros.get('idProyecto') ?? ''));
+
+        // Escribir no puede lanzar una peticion por tecla.
+        this.textoBuscado.pipe(
+            debounceTime(DEBOUNCE_BUSQUEDA),
+            distinctUntilChanged(),
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(() => this.cargarTablero());
+
+        // Varios eventos seguidos del hub se juntan en una sola recarga.
+        this.recargaPedida.pipe(
+            debounceTime(ESPERA_DE_RECARGA),
+            takeUntilDestroyed(this.destroyRef)
+        ).subscribe(() => this.cargarTablero());
 
         this.escucharElHub();
     }
@@ -118,18 +149,13 @@ export class TableroComponent implements OnInit, OnDestroy {
     private escucharElHub(): void {
         this.enVivoService.tareaCambiada
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(tarea => {
-                this.columnas = this.conLaTarea(tarea);
-                this.recalcularResumen();
-            });
+            .subscribe(tarea => this.aplicarEvento(() => this.conLaTarea(tarea)));
 
         this.enVivoService.tareaEliminada
             .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe(idTarea => {
-                this.columnas = this.sinLaTarea(idTarea);
-                this.recalcularResumen();
-            });
+            .subscribe(idTarea => this.aplicarEvento(() => this.sinLaTarea(idTarea)));
 
+        // Las columnas no las toca el filtro, asi que este si se aplica siempre.
         this.enVivoService.columnasCambiadas
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(columnas => {
@@ -146,6 +172,29 @@ export class TableroComponent implements OnInit, OnDestroy {
         this.enVivoService.estadoCambiado
             .pipe(takeUntilDestroyed(this.destroyRef))
             .subscribe(vivo => this.enVivo = vivo);
+    }
+
+    /**
+     * Con un filtro puesto, un evento NO se puede aplicar a ciegas.
+     *
+     * El hub emite a todo el grupo del tablero sin saber que esta mirando cada
+     * uno: el filtro es un query param de mi GET, vive en mi navegador y el
+     * servidor no lleva registro de el. Asi que si otro asigna una tarea a un
+     * tercero, a mi me llegaria igual y apareceria en pantalla pese a tener
+     * filtrado "solo lo mio". Peor todavia: si reasignan una que yo si veia, se
+     * quedaria ahi mintiendo.
+     *
+     * Por eso se recarga con los filtros puestos y decide el servidor, que es
+     * quien sabe lo que me toca. Sin filtros se aplica al instante, como antes.
+     */
+    private aplicarEvento(cambio: () => ColumnaConTareasDto[]): void {
+        if (this.hayFiltros) {
+            this.recargaPedida.next();
+            return;
+        }
+
+        this.columnas = cambio();
+        this.recalcularResumen();
     }
 
     private async conectarEnVivo(): Promise<void> {
@@ -258,21 +307,47 @@ export class TableroComponent implements OnInit, OnDestroy {
     }
 
     private async cargarTablero(): Promise<void> {
+        const peticion = ++this.peticionActual;
         this.cargando = true;
 
         try {
-            const tablero = await this.proyectoService.obtenerTablero(this.idProyecto);
+            const tablero = await this.proyectoService.obtenerTablero(this.idProyecto, this.filtros);
+            if (peticion !== this.peticionActual) { return; }
 
             this.columnas = (tablero.columnas ?? [])
                 .map(columna => ({ ...columna, tareas: [...(columna.tareas ?? [])] }))
                 .sort((una, otra) => una.orden - otra.orden);
         } catch (error) {
+            if (peticion !== this.peticionActual) { return; }
+
             this.columnas = [];
             this.avisarError('No se pudo cargar el tablero', error);
         } finally {
-            this.cargando = false;
-            this.recalcularResumen();
+            if (peticion === this.peticionActual) {
+                this.cargando = false;
+                this.recalcularResumen();
+            }
         }
+    }
+
+    // ---------------------------------------------------------------- filtros
+
+    get hayFiltros(): boolean {
+        return !!(this.filtros.idResponsable || this.filtros.prioridad || this.filtros.texto?.trim());
+    }
+
+    /** Los desplegables recargan de inmediato; el texto pasa por el debounce. */
+    filtrar(): void {
+        this.cargarTablero();
+    }
+
+    buscar(texto: string): void {
+        this.textoBuscado.next(texto);
+    }
+
+    limpiarFiltros(): void {
+        this.filtros = { idResponsable: null, prioridad: null, texto: '' };
+        this.cargarTablero();
     }
 
     private recalcularResumen(): void {
@@ -396,30 +471,40 @@ export class TableroComponent implements OnInit, OnDestroy {
         this.guardando = true;
 
         try {
+            let resultado: TareaDto;
+
             if (this.tareaEnEdicion) {
                 // `datos` trae idResponsable siempre, incluso null. El PUT
                 // reemplaza la tarea entera: si el campo no viajara, editar el
                 // titulo dejaria la tarea sin responsable sin que nadie lo pida.
-                const actualizada = await this.tareaService.actualizar({
+                resultado = await this.tareaService.actualizar({
                     idProyecto: this.idProyecto,
                     idTarea: this.tareaEnEdicion.id,
                     ...datos
                 });
-                this.columnas = this.conLaTarea(actualizada);
-                this.avisar('Tarea actualizada', actualizada.titulo);
+                this.avisar('Tarea actualizada', resultado.titulo);
             } else {
-                const creada = await this.tareaService.crear({
+                resultado = await this.tareaService.crear({
                     idProyecto: this.idProyecto,
                     idColumna: this.columnaDestino!.id,
                     ...datos
                 });
-                this.columnas = this.conLaTarea(creada);
-                this.avisar('Tarea creada', creada.titulo);
+                this.avisar('Tarea creada', resultado.titulo);
             }
 
             // Solo se cierra si el backend acepto: si falla, lo escrito sigue ahi.
             this.mostrarFormulario = false;
-            this.recalcularResumen();
+
+            // Con filtro puesto, lo que se acaba de guardar puede haber dejado
+            // de cumplirlo (reasignar a otro, cambiarle la prioridad).
+            // Pintarlo y quitarlo un instante despues seria un parpadeo feo:
+            // mejor preguntar directamente.
+            if (this.hayFiltros) {
+                await this.cargarTablero();
+            } else {
+                this.columnas = this.conLaTarea(resultado);
+                this.recalcularResumen();
+            }
         } catch (error) {
             this.avisarError('No se pudo guardar la tarea', error);
         } finally {

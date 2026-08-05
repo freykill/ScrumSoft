@@ -32,26 +32,62 @@
         </div>
     </div>
 
-    <!-- Resumen del tablero que se esta viendo, calculado de lo ya cargado -->
-    <div *ngIf="idProyecto && !cargando"
-         class="flex flex-wrap gap-4 mt-3 pt-3 border-top-1 surface-border">
-        <div class="flex align-items-baseline gap-2">
-            <span class="text-900 text-xl font-bold">{{ totalTareas }}</span>
-            <span class="text-600 text-sm">tareas</span>
+    <div *ngIf="idProyecto" class="mt-3 pt-3 border-top-1 surface-border
+                flex flex-column xl:flex-row xl:align-items-center justify-content-between gap-3">
+
+        <!--
+            Filtran en el servidor, no en local: asi el reporte puede pedir los
+            mismos y el archivo coincide con lo que se ve. Las columnas siguen
+            saliendo aunque queden vacias, para poder arrastrar hacia ellas.
+        -->
+        <div class="flex flex-column sm:flex-row gap-2">
+            <span class="p-input-icon-left w-full sm:w-16rem">
+                <i class="pi pi-search"></i>
+                <input pInputText type="text" class="w-full" placeholder="Buscar en las tareas"
+                    [(ngModel)]="filtros.texto" (ngModelChange)="buscar($event)">
+            </span>
+
+            <p-dropdown [options]="miembros" optionLabel="nombre" optionValue="idUsuario"
+                placeholder="Responsable" [showClear]="true" [autoDisplayFirst]="false"
+                styleClass="w-full sm:w-14rem"
+                [(ngModel)]="filtros.idResponsable" (ngModelChange)="filtrar()"></p-dropdown>
+
+            <p-dropdown [options]="opcionesPrioridad" optionLabel="label" optionValue="value"
+                placeholder="Prioridad" [showClear]="true" [autoDisplayFirst]="false"
+                styleClass="w-full sm:w-11rem"
+                [(ngModel)]="filtros.prioridad" (ngModelChange)="filtrar()"></p-dropdown>
+
+            <button pButton pRipple type="button" icon="pi pi-filter-slash" class="p-button-text"
+                pTooltip="Limpiar filtros" tooltipPosition="top"
+                [disabled]="!hayFiltros" (click)="limpiarFiltros()"></button>
         </div>
-        <div class="flex align-items-baseline gap-2">
-            <span class="text-900 text-xl font-bold">{{ columnas.length }}</span>
-            <span class="text-600 text-sm">columnas</span>
-        </div>
-        <div class="flex align-items-baseline gap-2">
-            <span class="text-900 text-xl font-bold">{{ tareasPrioritarias }}</span>
-            <span class="text-600 text-sm">de prioridad alta o critica</span>
+
+        <!-- Resumen de lo que se esta viendo, calculado de lo ya cargado -->
+        <div *ngIf="!cargando" class="flex flex-wrap gap-4 flex-shrink-0">
+            <div class="flex align-items-baseline gap-2">
+                <span class="text-900 text-xl font-bold">{{ totalTareas }}</span>
+                <span class="text-600 text-sm">{{ hayFiltros ? 'tareas filtradas' : 'tareas' }}</span>
+            </div>
+            <div class="flex align-items-baseline gap-2">
+                <span class="text-900 text-xl font-bold">{{ columnas.length }}</span>
+                <span class="text-600 text-sm">columnas</span>
+            </div>
+            <div class="flex align-items-baseline gap-2">
+                <span class="text-900 text-xl font-bold">{{ tareasPrioritarias }}</span>
+                <span class="text-600 text-sm">de prioridad alta o critica</span>
+            </div>
         </div>
     </div>
 </div>
 
 <div *ngIf="cargando" class="flex justify-content-center py-8">
     <p-progressSpinner strokeWidth="4" [style]="{ width: '3rem', height: '3rem' }"></p-progressSpinner>
+</div>
+
+<!-- Con filtro, todas las columnas salen vacias y "Sin tareas" no explica por que -->
+<div *ngIf="!cargando && columnas.length && hayFiltros && !totalTareas"
+     class="surface-card border-1 surface-border border-round-xl text-center text-600 py-3 mb-3">
+    Ninguna tarea coincide con el filtro.
 </div>
 
 <!--

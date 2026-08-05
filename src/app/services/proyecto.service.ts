@@ -6,7 +6,8 @@ import {
     ProyectoDto,
     ProyectoDtoPagedResult,
     ProyectoFiltros,
-    TableroDto
+    TableroDto,
+    TableroFiltros
 } from '../models';
 
 /**
@@ -83,9 +84,15 @@ export class ProyectoService {
      * pantalla de administracion de columnas tambien se sirve de aqui: coge
      * las columnas y cuenta las tareas para saber cuales se pueden borrar.
      */
-    obtenerTablero(idProyecto: string): Promise<TableroDto> {
+    obtenerTablero(idProyecto: string, filtros?: TableroFiltros): Promise<TableroDto> {
         return this.genericService.genericCallServices<TableroDto>(
-            METHODS.GET, this.urlService.urlProyectoTablero(idProyecto)
+            METHODS.GET, this.urlService.urlProyectoTablero(idProyecto), null, null,
+            {
+                // Los vacios no viajan: filtrar por cadena vacia no es filtrar.
+                idResponsable: filtros?.idResponsable || undefined,
+                prioridad: filtros?.prioridad || undefined,
+                texto: filtros?.texto?.trim() || undefined
+            }
         );
     }
 }
