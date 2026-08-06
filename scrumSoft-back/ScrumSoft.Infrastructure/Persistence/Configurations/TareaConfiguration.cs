@@ -79,6 +79,8 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasDatabaseName("ix_tareas_responsable");
 
             builder.HasQueryFilter(t => t.Estado == EstadoRegistro.Activo);
+
+            builder.HasData(DatosSemilla.Tareas());
         }
     }
 }

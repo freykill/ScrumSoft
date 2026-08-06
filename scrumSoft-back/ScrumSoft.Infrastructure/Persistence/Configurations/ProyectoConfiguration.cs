@@ -81,6 +81,8 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
 
             // Lo eliminado logicamente no aparece en ninguna consulta.
             builder.HasQueryFilter(p => p.Estado == EstadoRegistro.Activo);
+
+            builder.HasData(DatosSemilla.Proyectos());
         }
     }
 }

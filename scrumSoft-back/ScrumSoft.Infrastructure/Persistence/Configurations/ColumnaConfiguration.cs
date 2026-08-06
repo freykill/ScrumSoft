@@ -51,6 +51,8 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasDatabaseName("ix_columnas_proyecto_orden");
 
             builder.HasQueryFilter(c => c.Estado == EstadoRegistro.Activo);
+
+            builder.HasData(DatosSemilla.Columnas());
         }
     }
 }

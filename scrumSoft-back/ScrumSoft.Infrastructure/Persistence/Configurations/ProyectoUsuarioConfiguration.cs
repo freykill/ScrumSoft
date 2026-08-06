@@ -59,6 +59,8 @@ namespace ScrumSoft.Infrastructure.Persistence.Configurations
                 .HasDatabaseName("ix_proyecto_usuarios_usuario");
 
             builder.HasQueryFilter(m => m.Estado == EstadoRegistro.Activo);
+
+            builder.HasData(DatosSemilla.Miembros());
         }
     }
 }

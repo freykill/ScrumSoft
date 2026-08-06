@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ScrumSoft.Infrastructure.Persistence;
@@ -11,9 +12,11 @@ using ScrumSoft.Infrastructure.Persistence;
 namespace ScrumSoft.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(ScrumSoftDbContext))]
-    partial class ScrumSoftDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260806181235_SemillaDeDemostracion")]
+    partial class SemillaDeDemostracion
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
