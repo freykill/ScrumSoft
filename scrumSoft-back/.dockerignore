@@ -1,0 +1,10 @@
+# Todo lo que no hace falta para compilar: acelera el build y evita que
+# binarios de la maquina local se cuelen en la imagen.
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+**/*.log
+.git/
+.github/
+docs/
