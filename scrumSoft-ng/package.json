@@ -12,6 +12,7 @@
         "build:stage": "ng build --configuration stage",
         "build:prod": "ng build --configuration production",
         "test": "ng test",
+        "test:ci": "ng test --watch=false --browsers=ChromeHeadlessCI",
         "lint": "ng lint",
         "e2e": "ng e2e"
     },
