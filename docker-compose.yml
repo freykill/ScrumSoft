@@ -1,0 +1,57 @@
+name: scrumsoft
+
+services:
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - datos-postgres:/var/lib/postgresql/data
+    # La api aplica las migraciones nada mas arrancar: si postgres todavia no
+    # acepta conexiones, se cae. Este chequeo es lo que sostiene el depends_on.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./scrumSoft-back
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
+      # El host es "db": el nombre del servicio es el que resuelve la red interna.
+      ConnectionStrings__ScrumSoft: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+      Jwt__Clave: ${JWT_CLAVE}
+      Jwt__Emisor: ${JWT_EMISOR}
+      Jwt__Audiencia: ${JWT_AUDIENCIA}
+      Jwt__MinutosDeVigencia: ${JWT_MINUTOS_DE_VIGENCIA}
+      # Levantado con docker esto no se usa: la spa pide rutas relativas al
+      # proxy, que es su mismo origen, y el navegador no aplica CORS.
+      # Hace falta al desarrollar con "npm start", cuando la spa corre en su
+      # propio servidor y llama a la api por el puerto de abajo.
+      Cors__Origenes__0: ${CORS_ORIGEN}
+    depends_on:
+      db:
+        condition: service_healthy
+    # Publicado solo para inspeccionar la api de forma directa; el trafico real
+    # de la aplicacion entra por el proxy del servicio web.
+    ports:
+      - "${API_PUERTO}:8080"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./scrumSoft-ng
+    depends_on:
+      - api
+    ports:
+      - "${WEB_PUERTO}:80"
+    restart: unless-stopped
+
+volumes:
+  datos-postgres:
