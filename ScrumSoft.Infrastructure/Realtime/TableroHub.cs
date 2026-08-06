@@ -27,17 +27,16 @@ namespace ScrumSoft.Infrastructure.Realtime
             // tiene su propia identidad en Context.User, que si esta siempre poblada.
             var proyecto = await proyectos
                 .ObtenerPorIdAsync(idProyecto, Context.ConnectionAborted)
-                .ConfigureAwait(false)
                 ?? throw new HubException("El proyecto no existe.");
 
             if (!proyecto.EsMiembro(usuario.IdUsuario))
                 throw new HubException("No pertenece a este proyecto.");
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, NombreDeGrupo(idProyecto)).ConfigureAwait(false);
+            await Groups.AddToGroupAsync(Context.ConnectionId, NombreDeGrupo(idProyecto));
 
             await AnunciarAsync(
                 idProyecto,
-                presencia.Entrar(idProyecto, Context.ConnectionId, usuario)).ConfigureAwait(false);
+                presencia.Entrar(idProyecto, Context.ConnectionId, usuario));
         }
 
         public async Task Desuscribirse(Guid idProyecto)
