@@ -1,35 +1,56 @@
 // ==========================================
-// ScrumSoftID — Modelo de datos (PostgreSQL)
+// ScrumSoft — Modelo de datos (PostgreSQL)
 //
-// Toda tabla lleva la columna estado con el estado del registro:
-//   A = Activo   I = Inactivo   E = Eliminado (borrado logico)
-// Solo proyectos lleva ademas estado_proyecto, que es su ciclo de vida de negocio.
+// Refleja el esquema que generan las migraciones de EF Core en
+// ScrumSoft.Infrastructure/Persistence/Migrations/.
+//
+// Convenciones que aplican a todas las tablas:
+//   - La clave primaria es un uuid que genera la entidad en C#, no la base
+//     (ValueGeneratedNever): el objeto ya nace con su identidad, antes de existir
+//     ninguna fila.
+//   - estado es el borrado logico: A = Activo, I = Inactivo, E = Eliminado.
+//     Un filtro global de EF excluye de toda consulta lo que no esta en A.
+//   - fecha_creacion y fecha_actualizacion las rellena un interceptor de EF al
+//     guardar, por eso no llevan valor por defecto en la base.
+//   - Los enum se guardan como texto, no como numero: legible en la base y
+//     estable si se reordenan los valores en C#.
 // ==========================================
 
 // ------------------------------------------
 // 1. SEGURIDAD Y USUARIOS
 // ------------------------------------------
 Table usuarios {
-  id_usuario uuid [primary key, default: `gen_random_uuid()`]
+  id_usuario uuid [primary key]
   nombre varchar(150) [not null]
-  correo_electronico varchar(255) [not null, unique]
-  password_hash varchar(255) [not null, note: 'BCrypt: salt embebido + pepper por variable de entorno']
-  rol varchar(50) [not null, default: 'Miembro', note: 'Administrador | Miembro']
-  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
-  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  correo_electronico varchar(255) [not null]
+  password_hash varchar(255) [not null, note: 'BCrypt, factor 12. El salt es aleatorio por contrasena y viaja dentro del hash']
+  rol varchar(50) [not null, note: 'Administrador | Miembro']
+  estado varchar(1) [not null, note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null]
   fecha_actualizacion timestamptz
+
+  indexes {
+    correo_electronico [unique, name: 'ux_usuarios_correo', note: 'Es la llave del inicio de sesion']
+  }
 }
 
 // ------------------------------------------
 // 2. ACCESO A PROYECTOS
 // ------------------------------------------
 Table proyecto_usuarios {
+  id_proyecto_usuario uuid [primary key]
   id_proyecto uuid [not null]
   id_usuario uuid [not null]
-  fecha_asignacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  fecha_asignacion timestamptz [not null]
+  estado varchar(1) [not null, note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null]
+  fecha_actualizacion timestamptz
 
   indexes {
-    (id_proyecto, id_usuario) [pk]
+    // Unico PARCIAL, con filtro "estado = 'A'". Sin ese filtro, sacar a alguien
+    // del proyecto haria imposible volver a agregarlo: la fila de baja seguiria
+    // ocupando la combinacion. Asi las bajas quedan como historial del equipo.
+    (id_proyecto, id_usuario) [unique, name: 'ux_proyecto_usuarios', note: 'Parcial: WHERE estado = A']
     id_usuario [name: 'ix_proyecto_usuarios_usuario', note: 'Consulta "mis proyectos"']
   }
 }
@@ -38,55 +59,61 @@ Table proyecto_usuarios {
 // 3. CORE DEL KANBAN
 // ------------------------------------------
 Table proyectos {
-  id_proyecto uuid [primary key, default: `gen_random_uuid()`]
+  id_proyecto uuid [primary key]
   nombre varchar(200) [not null]
   descripcion text
   fecha_inicio date [not null]
   fecha_fin_prevista date
   estado_proyecto varchar(50) [not null, note: 'Planificacion | EnProgreso | Completado']
-  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
-  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  estado varchar(1) [not null, note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null]
   fecha_actualizacion timestamptz
 
   indexes {
-    nombre [name: 'ix_proyectos_nombre_trgm', note: 'GIN con pg_trgm: LIKE %texto% no usa btree']
+    nombre [name: 'ix_proyectos_nombre', note: 'Filtro por nombre del listado paginado']
   }
 }
 
 Table columnas {
-  id_columna uuid [primary key, default: `gen_random_uuid()`]
-  nombre varchar(100) [not null]
-  orden integer [not null, note: 'Huecos de 1000; se renumeran todas al reordenar']
+  id_columna uuid [primary key]
   id_proyecto uuid [not null]
-  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
-  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  nombre varchar(100) [not null]
+  orden integer [not null, note: 'Huecos de 1000; al reordenar se renumeran todas las del proyecto']
+  estado varchar(1) [not null, note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null]
   fecha_actualizacion timestamptz
 
   indexes {
-    (id_proyecto, orden) [name: 'ix_columnas_proyecto_orden']
+    (id_proyecto, orden) [name: 'ix_columnas_proyecto_orden', note: 'Columnas de un proyecto, ya ordenadas']
   }
 }
 
 Table tareas {
-  id_tarea uuid [primary key, default: `gen_random_uuid()`]
+  id_tarea uuid [primary key]
   titulo varchar(255) [not null]
   descripcion text
   prioridad varchar(50) [not null, note: 'Baja | Media | Alta | Critica']
   id_responsable uuid
   id_columna uuid [not null]
-  orden integer [not null, note: 'Huecos de 1000; punto medio al arrastrar, renormaliza si no hay hueco']
-  estado char(1) [not null, default: 'A', note: 'A: Activo, I: Inactivo, E: Eliminado']
-  fecha_creacion timestamptz [not null, default: `CURRENT_TIMESTAMP`]
+  orden integer [not null, note: 'Huecos de 1000; punto medio al arrastrar, renumera la columna si no queda hueco']
+  estado varchar(1) [not null, note: 'A: Activo, I: Inactivo, E: Eliminado']
+  fecha_creacion timestamptz [not null]
   fecha_actualizacion timestamptz
 
   indexes {
     (id_columna, orden) [name: 'ix_tareas_columna_orden', note: 'Consulta principal del tablero']
-    id_responsable [name: 'ix_tareas_responsable', note: 'Filtro opcional 7.1']
+    id_responsable [name: 'ix_tareas_responsable', note: 'Filtro por responsable']
   }
 }
 
 // ------------------------------------------
 // RELACIONES
+//
+// Borrar un proyecto arrastra sus columnas y sus membresias, porque fuera de el
+// no significan nada. Una columna con tareas no se puede borrar (restrict): la
+// regla la comprueba antes el dominio y devuelve un mensaje, la restriccion es
+// la ultima defensa. Y dar de baja a un usuario no borra sus tareas, solo las
+// deja sin responsable (set null).
 // ------------------------------------------
 Ref fk_proyecto_miembro: proyecto_usuarios.id_proyecto > proyectos.id_proyecto [delete: cascade]
 Ref fk_usuario_miembro: proyecto_usuarios.id_usuario > usuarios.id_usuario [delete: cascade]
