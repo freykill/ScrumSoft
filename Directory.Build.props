@@ -17,6 +17,10 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <IsPackable>false</IsPackable>
     <IsTestProject>true</IsTestProject>
+    <!-- CA1707 prohibe los guiones bajos. En las pruebas son deliberados: el nombre
+         separa el metodo probado del escenario y asi el reporte del runner se lee
+         como una lista de reglas de negocio. La regla se apaga solo aqui. -->
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
   </PropertyGroup>
 
 </Project>
