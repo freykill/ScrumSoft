@@ -32,7 +32,7 @@ La primera vez tarda unos minutos porque compila las dos imagenes. Cuando termin
 
 | | URL | Para que |
 |---|---|---|
-| **Aplicacion** | http://localhost:4200 | es por donde se usa todo |
+| **Aplicacion** | http://localhost:8086 | es por donde se usa todo |
 | Swagger | http://localhost:8085/swagger | inspeccionar la API a mano |
 | PostgreSQL | — | no se publica: vive en la red interna de Docker |
 
