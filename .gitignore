@@ -1,0 +1,11 @@
+# Variables de entorno reales: solo se versiona .env.example
+.env
+*.env
+!.env.example
+
+# Salidas de compilacion que ya ignoran los subproyectos, repetidas aqui
+# para que nada se cuele desde la raiz del monorepo.
+bin/
+obj/
+node_modules/
+dist/
