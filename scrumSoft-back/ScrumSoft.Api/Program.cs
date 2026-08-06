@@ -1,11 +1,16 @@
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using ScrumSoft.Api.Adapters;
+using ScrumSoft.Api.Controllers;
 using ScrumSoft.Api.Middlewares;
 using ScrumSoft.Application;
 using ScrumSoft.Application.Common;
@@ -107,6 +112,55 @@ builder.Services.AddCors(opciones =>
         // genera el servidor y tendria que inventarse uno.
         .WithExposedHeaders("Content-Disposition")));
 
+// Detras del proxy de nginx todas las peticiones llegan con la IP interna del
+// contenedor: sin leer X-Forwarded-For, el limite de intentos de login seria uno
+// solo compartido por todos los usuarios. Las listas de proxies conocidos se
+// vacian porque la IP del contenedor de nginx cambia en cada arranque del compose.
+builder.Services.Configure<ForwardedHeadersOptions>(opciones =>
+{
+    opciones.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    opciones.KnownNetworks.Clear();
+    opciones.KnownProxies.Clear();
+});
+
+// Frena la fuerza bruta contra el login. BCrypt hace lenta cada verificacion,
+// pero nada impedia intentar contrasenas sin parar. Cinco intentos por minuto y
+// por IP le sobran a una persona que se equivoca y cortan un ataque automatizado.
+// Solo el endpoint que declara la politica queda limitado; el resto de la API no cambia.
+builder.Services.AddRateLimiter(opciones =>
+{
+    opciones.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    opciones.AddPolicy(AuthController.PoliticaDeLimiteDeLogin, contexto =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            contexto.Connection.RemoteIpAddress?.ToString() ?? "sin-ip",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(1)
+            }));
+
+    // Mismo formato de error que MiddlewareDeErrores, para que el frontend
+    // muestre el detalle en su toast sin necesitar un caso especial.
+    opciones.OnRejected = async (rechazo, cancelacion) =>
+    {
+        rechazo.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+        rechazo.HttpContext.Response.Headers.RetryAfter = "60";
+
+        await rechazo.HttpContext.Response.WriteAsJsonAsync(
+            new ProblemDetails
+            {
+                Status = StatusCodes.Status429TooManyRequests,
+                Title = "Demasiados intentos",
+                Detail = "Se supero el limite de intentos de inicio de sesion. Espera un minuto y vuelve a intentarlo.",
+                Instance = rechazo.HttpContext.Request.Path
+            },
+            options: null,
+            contentType: "application/problem+json",
+            cancelacion).ConfigureAwait(false);
+    };
+});
+
 builder.Services
     .AddControllers()
     .AddJsonOptions(opciones =>
@@ -165,7 +219,11 @@ using (var alcance = app.Services.CreateScope())
     await contexto.Database.MigrateAsync();
 }
 
-// Primero de todo: cualquier excepcion de aqui hacia adentro queda traducida.
+// Antes que nada: cualquier middleware posterior (limite de intentos, redireccion
+// https) debe ver la IP y el esquema reales del cliente, no los del proxy.
+app.UseForwardedHeaders();
+
+// Cualquier excepcion de aqui hacia adentro queda traducida.
 app.UseMiddleware<MiddlewareDeErrores>();
 
 if (app.Environment.IsDevelopment())
@@ -177,6 +235,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors();
+
+// Antes de autenticar: un atacante bloqueado no debe costar ni la validacion
+// del token ni el hasheo BCrypt de la contrasena.
+app.UseRateLimiter();
 
 // El orden importa: primero se averigua quien es (autenticacion),
 // despues si puede (autorizacion).
