@@ -1,0 +1,38 @@
+<div class="layout-topbar">
+    <!-- El logo es el mismo del login, sin variante clara/oscura: el png ya se
+         lee bien sobre los dos temas -->
+    <a class="layout-topbar-logo" routerLink="">
+        <img src="assets/scrum/logo.png" alt="ScrumSoft">
+        <span>ScrumSoft</span>
+    </a>
+
+    <button #menubutton class="p-link layout-menu-button layout-topbar-button" (click)="layoutService.onMenuToggle()">
+        <i class="pi pi-bars"></i>
+    </button>
+
+    <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button" (click)="layoutService.showProfileSidebar()">
+        <i class="pi pi-ellipsis-v"></i>
+    </button>
+
+    <div #topbarmenu class="layout-topbar-menu" [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
+
+        <p-menu #menuUsuario [model]="opcionesUsuario" [popup]="true" appendTo="body"></p-menu>
+
+        <button class="p-link flex align-items-center gap-2 px-2 py-1 border-round"
+                (click)="menuUsuario.toggle($event)">
+
+            <span class="flex align-items-center justify-content-center border-circle bg-primary text-0 font-medium flex-shrink-0"
+                  style="width: 2rem; height: 2rem; font-size: .8rem">
+                {{ inicialesDelUsuario }}
+            </span>
+
+            <!-- El nombre se esconde en movil, donde la barra no da de si -->
+            <span class="hidden sm:flex flex-column align-items-start line-height-2">
+                <span class="text-900 font-medium text-sm">{{ nombre }}</span>
+                <span class="text-600 text-xs">{{ rol }}</span>
+            </span>
+
+            <i class="pi pi-angle-down text-600 text-sm"></i>
+        </button>
+    </div>
+</div>

@@ -1,0 +1,41 @@
+<div
+    class="surface-card border-round-xl border-1 surface-border p-4 mb-3 flex flex-column md:flex-row md:align-items-center justify-content-between gap-3">
+    <div class="flex-1">
+        <h2 class="text-900 text-2xl font-bold m-0">Usuarios</h2>
+        <p class="text-600 mt-2 mb-0">
+            {{ esAdministrador
+                ? 'Administra quien tiene acceso a ScrumSoft y con que rol.'
+                : 'Consulta quien tiene acceso a ScrumSoft. Solo un administrador puede modificarlos.' }}
+        </p>
+    </div>
+
+    <!-- Solo un administrador puede dar de alta; para el resto el POST es 403 -->
+    <div class="flex-shrink-0" *ngIf="esAdministrador">
+        <button pButton pRipple icon="pi pi-plus" label="Nuevo usuario" (click)="nuevo()"></button>
+    </div>
+</div>
+
+<div class="surface-card border-1 surface-border border-round-xl overflow-hidden">
+
+    <!--
+        Un solo buscador: la API expone `Filtro` y nada mas. Habia dropdowns de
+        rol y de estado, pero el estado no existe en UsuarioDto y filtrar el rol
+        en cliente solo afectaria a la pagina cargada.
+    -->
+    <div class="p-3 border-bottom-1 surface-border">
+        <span class="p-input-icon-left w-full lg:w-30rem">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" class="w-full" placeholder="Buscar por nombre o correo"
+                [(ngModel)]="filtros.filtro" (ngModelChange)="buscar($event)">
+        </span>
+    </div>
+
+    <app-usuarios-list [usuarios]="usuarios" [cargando]="cargando" [totalElementos]="totalElementos"
+        [primeraFila]="primeraFila" [filasPorPagina]="filtros.tamanoPagina!"
+        [puedeEditar]="esAdministrador"
+        (paginar)="paginar($event)" (editar)="editar($event)"></app-usuarios-list>
+</div>
+
+<app-usuarios-form [(visible)]="mostrarFormulario" [usuario]="usuarioEnEdicion"
+    [esUnoMismo]="editandoseASiMismo" [guardando]="guardando"
+    (guardar)="guardar($event)"></app-usuarios-form>

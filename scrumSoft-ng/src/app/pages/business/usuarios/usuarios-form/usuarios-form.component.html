@@ -1,0 +1,65 @@
+<p-dialog [visible]="visible"
+          (visibleChange)="visibleChange.emit($event)"
+          (onShow)="reiniciar()"
+          [header]="esNuevo ? 'Nuevo usuario' : 'Editar usuario'"
+          [modal]="true"
+          [draggable]="false"
+          [resizable]="false"
+          [style]="{ width: '32rem' }"
+          [breakpoints]="{ '640px': '92vw' }">
+
+    <form [formGroup]="form" (ngSubmit)="enviar()" class="flex flex-column gap-3 pt-2">
+
+        <div class="flex flex-column gap-2">
+            <label for="nombre" class="font-medium text-900">Nombre</label>
+            <input pInputText id="nombre" formControlName="nombre" autocomplete="off"
+                   placeholder="Nombre y apellido"
+                   [class.ng-invalid]="invalido('nombre')" [class.ng-dirty]="invalido('nombre')">
+            <small class="p-error" *ngIf="invalido('nombre')">Escribe al menos 3 caracteres.</small>
+        </div>
+
+        <!-- Solo al crear: el correo es con lo que se inicia sesion y el PUT no lo acepta -->
+        <div class="flex flex-column gap-2" *ngIf="esNuevo">
+            <label for="correo" class="font-medium text-900">Correo electronico</label>
+            <input pInputText id="correo" formControlName="correoElectronico" autocomplete="off"
+                   placeholder="usuario@scrumsoft.com"
+                   [class.ng-invalid]="invalido('correoElectronico')" [class.ng-dirty]="invalido('correoElectronico')">
+            <small class="p-error" *ngIf="invalido('correoElectronico')">Escribe un correo valido.</small>
+        </div>
+
+        <!-- En edicion se muestra apagado, para saber de quien es la ficha -->
+        <div class="flex flex-column gap-2" *ngIf="!esNuevo">
+            <label class="font-medium text-900">Correo electronico</label>
+            <span class="text-600">{{ usuario?.correoElectronico }}</span>
+            <small class="text-500">No se puede cambiar: es con lo que inicia sesion.</small>
+        </div>
+
+        <!-- Solo al crear: no hay endpoint para cambiar la contrasena -->
+        <div class="flex flex-column gap-2" *ngIf="esNuevo">
+            <label for="contrasena" class="font-medium text-900">Contrasena</label>
+            <p-password inputId="contrasena" formControlName="contrasena" [toggleMask]="true" [feedback]="false"
+                        styleClass="w-full" inputStyleClass="w-full" autocomplete="new-password"></p-password>
+            <small class="p-error" *ngIf="invalido('contrasena')">Minimo 8 caracteres.</small>
+        </div>
+
+        <div class="flex flex-column gap-2">
+            <label for="rol" class="font-medium text-900">Rol</label>
+            <p-dropdown inputId="rol" formControlName="rol" appendTo="body" [options]="opcionesRol"
+                        optionLabel="label" optionValue="value" styleClass="w-full"></p-dropdown>
+            <small class="text-600" *ngIf="!esUnoMismo">
+                Administrador es el unico que puede crear y editar usuarios.
+            </small>
+            <small class="text-600" *ngIf="esUnoMismo">
+                No puedes cambiar tu propio rol. Si el ultimo administrador se degradara,
+                nadie podria volver a crear usuarios.
+            </small>
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <button pButton pRipple type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-text" (click)="cerrar()"></button>
+        <button pButton pRipple type="button" label="Guardar" icon="pi pi-check"
+                [loading]="guardando" (click)="enviar()"></button>
+    </ng-template>
+</p-dialog>

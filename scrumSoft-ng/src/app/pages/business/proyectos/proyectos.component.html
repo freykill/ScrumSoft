@@ -1,0 +1,36 @@
+<div
+    class="surface-card border-round-xl border-1 surface-border p-4 mb-3 flex flex-column md:flex-row md:align-items-center justify-content-between gap-3">
+    <div class="flex-1">
+        <h2 class="text-900 text-2xl font-bold m-0">Proyectos</h2>
+        <p class="text-600 mt-2 mb-0">Cada proyecto tiene su propio tablero con columnas y tareas.</p>
+    </div>
+
+    <div class="flex-shrink-0">
+        <button pButton pRipple icon="pi pi-plus" label="Nuevo proyecto" (click)="nuevo()"></button>
+    </div>
+</div>
+
+<div class="surface-card border-1 surface-border border-round-xl overflow-hidden">
+
+    <!-- Barra de filtros -->
+    <div
+        class="p-3 border-bottom-1 surface-border flex flex-column lg:flex-row gap-2 lg:align-items-center justify-content-between">
+
+        <span class="p-input-icon-left w-full lg:w-30rem">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" class="w-full" placeholder="Buscar por nombre"
+                [(ngModel)]="filtros.nombre" (ngModelChange)="buscar($event)">
+        </span>
+    </div>
+
+    <app-proyectos-list [proyectos]="proyectos" [cargando]="cargando" [totalElementos]="totalElementos"
+        [primeraFila]="primeraFila" [filasPorPagina]="filtros.tamanoPagina!"
+        (paginar)="paginar($event)" (verTablero)="verTablero($event)" (verColumnas)="verColumnas($event)"
+        (verMiembros)="verMiembros($event)" (editar)="editar($event)"
+        (eliminar)="confirmarEliminacion($event)"></app-proyectos-list>
+</div>
+
+<app-proyectos-form [(visible)]="mostrarFormulario" [proyecto]="proyectoEnEdicion" [guardando]="guardando"
+    (guardar)="guardar($event)"></app-proyectos-form>
+
+<p-confirmDialog [style]="{ width: '28rem' }"></p-confirmDialog>

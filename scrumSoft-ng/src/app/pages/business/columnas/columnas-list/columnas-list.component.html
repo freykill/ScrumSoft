@@ -1,0 +1,56 @@
+<!--
+    Sin columna "Tareas": el GET de columnas devuelve ColumnaDto, que no trae
+    el conteo. Por eso la papelera va siempre activa y quien decide si se
+    puede borrar es el backend, con su 400.
+-->
+<p-table [value]="columnas"
+         [loading]="cargando"
+         styleClass="p-datatable-sm"
+         [tableStyle]="{ 'min-width': '34rem' }">
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th style="width: 6rem" class="text-center">Orden</th>
+            <th>Nombre</th>
+            <th style="width: 14rem" class="text-right">Acciones</th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-columna let-i="rowIndex">
+        <tr>
+            <!--
+                La posicion en la lista, no `columna.orden`. El backend ordena
+                con huecos (1000, 2000, 3000...) para poder intercalar sin
+                tocar las demas filas; ese numero es suyo y al usuario no le
+                dice nada. Ademas asi la posicion es correcta en el acto al
+                mover, sin esperar a que el servidor conteste.
+            -->
+            <td class="text-center text-600">{{ i + 1 }}</td>
+            <td class="font-medium text-900">{{ columna.nombre }}</td>
+            <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
+            <td class="flex justify-content-end">
+                <button pButton pRipple icon="pi pi-arrow-up" pTooltip="Subir" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        [disabled]="i === 0" (click)="subir.emit(i)"></button>
+                <button pButton pRipple icon="pi pi-arrow-down" pTooltip="Bajar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        [disabled]="i === columnas.length - 1" (click)="bajar.emit(i)"></button>
+                <button pButton pRipple icon="pi pi-pencil" pTooltip="Renombrar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded mr-1"
+                        (click)="renombrar.emit(columna)"></button>
+                <button pButton pRipple icon="pi pi-trash" pTooltip="Eliminar" tooltipPosition="top"
+                        class="p-button-text p-button-rounded p-button-danger"
+                        (click)="eliminar.emit(columna)"></button>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="3" class="text-center py-6">
+                <i class="pi pi-th-large text-4xl text-300 block mb-3"></i>
+                <span class="text-600">Este proyecto todavia no tiene columnas.</span>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>

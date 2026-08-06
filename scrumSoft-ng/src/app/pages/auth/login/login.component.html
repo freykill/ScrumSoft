@@ -1,0 +1,77 @@
+<div class="surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden">
+    <div class="flex flex-column align-items-center justify-content-center">
+
+        <div class="flex align-items-center justify-content-center gap-3 mb-5">
+            <img src="assets/scrum/logo.png" alt="ScrumSoft" class="w-4rem flex-shrink-0">
+            <span class="text-900 text-4xl font-bold">Scrum<span style="color: var(--primary-color)">Soft</span></span>
+        </div>
+
+        <div style="border-radius: 56px; padding: 0.3rem; background: linear-gradient(180deg, var(--primary-color) 10%, rgba(33, 150, 243, 0) 30%);">
+            <div class="w-full surface-card py-8 px-5 sm:px-8" style="border-radius: 53px">
+
+                <div class="text-center mb-5">
+                    <div class="text-900 text-3xl font-medium mb-3">Bienvenido</div>
+                    <span class="text-600 font-medium">Inicia sesion para continuar</span>
+                </div>
+
+                <form [formGroup]="form" (ngSubmit)="iniciarSesion()">
+
+                    <div *ngIf="error" class="mb-4 p-3 border-round bg-red-100 text-red-700 text-center">
+                        {{ error }}
+                    </div>
+
+                    <label for="correo" class="block text-900 text-xl font-medium mb-2">Correo</label>
+                    <input id="correo" type="email" pInputText formControlName="correo"
+                           placeholder="correo@empresa.com" autocomplete="username"
+                           class="w-full md:w-30rem" style="padding: 1rem"
+                           [class.ng-dirty]="correo.touched && correo.invalid">
+                    <small class="block h-1rem mb-3 text-red-500">
+                        <ng-container *ngIf="correo.touched && correo.invalid">
+                            {{ correo.hasError('required') ? 'El correo es obligatorio' : 'Formato de correo no valido' }}
+                        </ng-container>
+                    </small>
+
+                    <label for="clave" class="block text-900 font-medium text-xl mb-2">Contrasena</label>
+                    <p-password inputId="clave" formControlName="clave" placeholder="Contrasena"
+                                [toggleMask]="true" [feedback]="false"
+                                styleClass="w-full" inputStyleClass="w-full p-3 md:w-30rem"
+                                autocomplete="current-password"></p-password>
+                    <small class="block h-1rem mb-3 text-red-500">
+                        <ng-container *ngIf="clave.touched && clave.invalid">
+                            {{ clave.hasError('required') ? 'La contrasena es obligatoria' : 'Minimo 4 caracteres' }}
+                        </ng-container>
+                    </small>
+
+                    <div class="flex align-items-center justify-content-between mb-5 gap-5">
+                        <div class="flex align-items-center">
+                            <p-checkbox inputId="recordarme" formControlName="recordarme" [binary]="true" styleClass="mr-2"></p-checkbox>
+                            <label for="recordarme">Recordarme</label>
+                        </div>
+                        <a class="font-medium no-underline ml-2 text-right cursor-pointer" style="color: var(--primary-color)">
+                            Olvide mi contrasena
+                        </a>
+                    </div>
+
+                    <button pButton pRipple type="submit" label="Iniciar sesion"
+                            class="w-full p-3 text-xl" [loading]="cargando"></button>
+                </form>
+
+                <div class="mt-5 p-4 border-round-xl flex flex-column" style="border: 1px dashed var(--surface-border)">
+                    <p class="text-center text-600 mt-0 mb-3">Cuentas de prueba</p>
+
+                    <button *ngFor="let cuenta of cuentasDemo; let primero = first"
+                            pButton pRipple type="button"
+                            class="w-full p-button-outlined p-button-secondary justify-content-center"
+                            [class.mt-2]="!primero"
+                            [disabled]="cargando"
+                            (click)="entrarConDemo(cuenta)">
+                        <i class="pi pi-play-circle mr-2"></i>
+                        <span class="font-medium">{{ cuenta.correo }}</span>
+                        <span class="text-500 ml-2 hidden sm:inline">· {{ cuenta.clave }}</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

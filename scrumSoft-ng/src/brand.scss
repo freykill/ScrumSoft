@@ -1,0 +1,28 @@
+/* ============================================================================
+   Colores de marca — ScrumSoft
+
+   OJO: el color PRIMARIO no se define aqui.
+   El theme.css de PrimeNG trae los colores como hex literales en cada regla
+   (.p-button { background: #22c55e }), no como var(), asi que pisar la variable
+   no alcanza. El primario vive en el tema propio:
+
+       src/assets/layout/styles/theme/lara-light-scrum/theme.css
+
+   que es una copia de lara-light-indigo con la paleta indigo reemplazada:
+       #EEF2FF -> #f0fdf4     #6366F1 -> #22c55e   (primario)
+       #E0E7FF -> #dcfce7     #4F46E5 -> #16a34a   (hover)
+       #C7D2FE -> #bbf7d0     #4338CA -> #15803d   (activo)
+
+   Para cambiar el primario: borrar esa carpeta, copiar de nuevo
+   lara-light-indigo y repetir el reemplazo con la paleta nueva.
+   Nunca editar el tema a mano regla por regla.
+   ============================================================================ */
+
+:root {
+    /* Tonos del logo (src/assets/scrum/logo.png). PrimeNG no los usa:
+       son para graficos, badges de prioridad y detalles. var(--marca-coral) */
+    --marca-coral: #f08080;
+    --marca-ambar: #fbd46d;
+    --marca-azul: #a8c8e8;
+    --marca-verde: #a8e6a3;
+}

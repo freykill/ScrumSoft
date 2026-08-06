@@ -1,0 +1,48 @@
+<!-- Sin paginador: el GET de miembros devuelve la lista entera, no pagina -->
+<p-table [value]="miembros"
+         [loading]="cargando"
+         styleClass="p-datatable-sm"
+         [tableStyle]="{ 'min-width': '45rem' }">
+
+    <ng-template pTemplate="header">
+        <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th style="width: 11rem">Rol</th>
+            <th style="width: 10rem">Desde</th>
+            <th style="width: 7rem" class="text-right">Acciones</th>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-miembro>
+        <tr>
+            <td class="font-medium text-900">{{ miembro.nombre }}</td>
+            <td class="text-600">{{ miembro.correoElectronico }}</td>
+            <td>
+                <!-- Rol global del usuario, no un rol dentro del proyecto: la API
+                     no tiene ese concepto, asi que aqui solo se informa -->
+                <p-tag [value]="miembro.rol" [severity]="severidadRol(miembro.rol)"></p-tag>
+            </td>
+            <td class="text-600">{{ miembro.fechaAsignacion | date: 'dd/MM/yyyy' }}</td>
+            <!-- justify-content-end y no text-right: en un flex, text-right no alinea nada -->
+            <td class="flex justify-content-end">
+                <button pButton pRipple icon="pi pi-user-minus" tooltipPosition="top"
+                        class="p-button-text p-button-rounded p-button-danger"
+                        [pTooltip]="esElUnicoMiembro
+                            ? 'No se puede quitar al ultimo miembro: el proyecto se quedaria sin nadie'
+                            : 'Quitar del proyecto'"
+                        [disabled]="esElUnicoMiembro"
+                        (click)="quitar.emit(miembro)"></button>
+            </td>
+        </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="5" class="text-center py-6">
+                <i class="pi pi-users text-4xl text-300 block mb-3"></i>
+                <span class="text-600">Este proyecto todavia no tiene miembros.</span>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
