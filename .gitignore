@@ -3,6 +3,10 @@
 *.env
 !.env.example
 
+# Contexto de trabajo con Claude Code: es personal, no parte de la entrega.
+CLAUDE.local.md
+.claude/
+
 # Salidas de compilacion que ya ignoran los subproyectos, repetidas aqui
 # para que nada se cuele desde la raiz del monorepo.
 bin/
