@@ -87,6 +87,12 @@ reemplaza. Referencia viva en `pages/business/usuarios/`.
 leen de el. Con "recordarme" la sesion va a `localStorage` y sin el a
 `sessionStorage`, por eso nadie mas puede asumir donde esta.
 
+La diferencia practica: `sessionStorage` vive por pestana, asi que sin
+"recordarme" una pestana nueva no tiene sesion y el guard pide iniciar sesion
+otra vez. Marcado, la sesion se comparte entre todas las pestanas del navegador
+y sobrevive cerrarlo. En ambos casos el token expira a los 60 minutos y el
+guard vuelve a exigir credenciales.
+
 **Un solo interceptor.** Adjunta el token y, ante un 401, cierra la sesion y
 manda al login. El guard esta puesto sobre el layout y no sobre cada pantalla:
 todo lo que cuelga de ahi es privado, asi que no hay forma de olvidarlo al

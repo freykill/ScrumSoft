@@ -46,6 +46,12 @@ La primera vez tarda unos minutos porque compila las dos imagenes. Cuando termin
 Las migraciones se aplican solas al arrancar la API, incluidos estos usuarios y
 los datos de ejemplo. **No hay ningun paso previo de base de datos.**
 
+El checkbox **Recordarme** del login decide el alcance de la sesion: marcado,
+se guarda en `localStorage` y se comparte entre todas las pestanas del
+navegador; desmarcado, va a `sessionStorage`, que vive por pestana, asi que una
+pestana nueva pide iniciar sesion otra vez. Es el comportamiento elegido, no un
+fallo. En ambos casos el token expira a los 60 minutos.
+
 ### Si un puerto esta ocupado
 
 Se cambia en el `.env` y se vuelve a levantar. No hay que recompilar nada: la SPA
